@@ -3346,7 +3346,8 @@ function renderDiet(){
 function buildMealCard(meal,col){
   const tk=todayKey();const card=document.createElement('div');card.className='meal-card';
   const customItems=getCustomItems(meal.id);
-  const allItems=[...meal.items,...customItems];
+  const hiddenIds=getHiddenBaseItems(meal.id);
+  const allItems=[...meal.items.filter(it=>!hiddenIds.includes(it.id)),...customItems];
   const done=allItems.filter(it=>(checks[tk]||{})[it.id]).length;
   const pct=allItems.length?Math.round(done/allItems.length*100):0;
   card.innerHTML=`
