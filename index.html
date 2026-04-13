@@ -1683,6 +1683,41 @@ body {
         <div id="fe-autocomplete" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf);border:1px solid var(--brd2);border-radius:0 0 8px 8px;z-index:999;max-height:180px;overflow-y:auto;box-shadow:var(--sh2);"></div>
       </div>
 
+      <!-- Cantidad + chips rápidos -->
+      <div style="background:var(--fuerza-bg);border:1px solid var(--fuerza-br);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div>
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--fuerza);margin-bottom:3px;text-transform:uppercase;font-weight:700;">Cantidad</div>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <input id="fe-qty" type="number" value="100" min="1" max="2000" step="5" inputmode="decimal"
+                style="width:70px;background:var(--surf);border:1.5px solid var(--fuerza-br);border-radius:8px;padding:7px 8px;font-size:14px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:var(--fuerza);outline:none;text-align:center;"
+                oninput="recalcFoodMacros()"/>
+              <select id="fe-qty-unit" onchange="recalcFoodMacros()"
+                style="background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:7px 8px;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--ink);outline:none;">
+                <option value="g">g</option>
+                <option value="ml">ml</option>
+                <option value="unidad">unidad</option>
+                <option value="ración">ración</option>
+              </select>
+            </div>
+          </div>
+          <div style="flex:1;text-align:right;">
+            <div style="font-size:18px;font-weight:800;color:var(--fuerza);letter-spacing:-.5px;" id="fe-qty-kcal-live">—</div>
+            <div style="font-size:9px;color:var(--ink3);font-weight:500;">kcal totales</div>
+          </div>
+        </div>
+        <!-- Quick chips -->
+        <div style="display:flex;gap:5px;flex-wrap:wrap;" id="fe-qty-chips">
+          <button onclick="setFoodQty(50)"  style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">50g</button>
+          <button onclick="setFoodQty(75)"  style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">75g</button>
+          <button onclick="setFoodQty(100)" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--fuerza-br);background:var(--fuerza-bg);color:var(--fuerza);cursor:pointer;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;" id="fe-chip-100">100g</button>
+          <button onclick="setFoodQty(150)" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">150g</button>
+          <button onclick="setFoodQty(200)" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">200g</button>
+          <button onclick="setFoodQty(250)" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">250g</button>
+        </div>
+      </div>
+
+      <!-- Macros (se recalculan) -->
       <div style="display:flex;gap:8px;margin-bottom:8px;">
         <div style="flex:1;">
           <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--ink3);margin-bottom:3px;text-transform:uppercase;">kcal</div>
@@ -3657,7 +3692,12 @@ function fillFoodFromSuggestion(idx, mealId){
   document.getElementById('fe-new-prot').value = s.prot;
   document.getElementById('fe-new-carb').value = s.carb;
   document.getElementById('fe-new-fat').value  = s.fat||0;
-  // Show hint if it has one
+  _feBase = {kcal: s.kcal, prot: s.prot, carb: s.carb, fat: s.fat||0};
+  const qtyEl = document.getElementById('fe-qty');
+  if(qtyEl) qtyEl.value = 100;
+  const live = document.getElementById('fe-qty-kcal-live');
+  if(live) live.textContent = s.kcal + ' kcal';
+  recalcFoodMacros();
   const hint = document.getElementById('fe-macro-hint');
   if(s.hint){hint.textContent='💡 '+s.hint;hint.style.display='block';}
   else hint.style.display='none';
@@ -3771,14 +3811,23 @@ function fillFoodFromIndex(i){
   document.getElementById('fe-new-carb').value = item.carb;
   document.getElementById('fe-new-fat').value  = item.fat||0;
   document.getElementById('fe-autocomplete').style.display = 'none';
-  document.getElementById('fe-macro-hint').style.display = 'none';
-  // Show per-100g note if from Open Food Facts
+  // Store base macros per 100g for recalculation
+  _feBase = {kcal: item.kcal, prot: item.prot, carb: item.carb, fat: item.fat||0};
+  // Reset quantity to 100g
+  const qtyEl = document.getElementById('fe-qty');
+  if(qtyEl) qtyEl.value = 100;
+  const live = document.getElementById('fe-qty-kcal-live');
+  if(live) live.textContent = Math.round(item.kcal) + ' kcal';
+  recalcFoodMacros();
+  // Show hint
+  const hint = document.getElementById('fe-macro-hint');
   if(item.source === 'off'){
-    const hint = document.getElementById('fe-macro-hint');
-    hint.textContent = '📋 Datos por 100g (Open Food Facts). Ajusta la cantidad si es necesario.';
+    hint.textContent = '📋 Datos por 100g · ajusta la cantidad arriba si es necesario.';
     hint.style.display = 'block';
     hint.style.background = 'var(--fuerza-bg)';
     hint.style.color = 'var(--fuerza)';
+  } else {
+    hint.style.display = 'none';
   }
 }
 
@@ -3793,6 +3842,12 @@ function fillFoodFromDB(name){
   document.getElementById('fe-new-fat').value  = d.fat||0;
   document.getElementById('fe-autocomplete').style.display='none';
   document.getElementById('fe-macro-hint').style.display='none';
+  _feBase = {kcal: d.kcal, prot: d.prot, carb: d.carb, fat: d.fat||0};
+  const qtyEl = document.getElementById('fe-qty');
+  if(qtyEl) qtyEl.value = 100;
+  const live = document.getElementById('fe-qty-kcal-live');
+  if(live) live.textContent = d.kcal + ' kcal';
+  recalcFoodMacros();
 }
 
 function openFoodEditor(mealId){
@@ -3804,6 +3859,13 @@ function openFoodEditor(mealId){
   ['fe-new-name','fe-new-kcal','fe-new-prot','fe-new-carb','fe-new-fat'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
+  _feBase = null;
+  const qtyEl = document.getElementById('fe-qty');
+  if(qtyEl) qtyEl.value = 100;
+  const unitEl = document.getElementById('fe-qty-unit');
+  if(unitEl) unitEl.value = 'g';
+  const liveEl = document.getElementById('fe-qty-kcal-live');
+  if(liveEl) liveEl.textContent = '—';
   document.getElementById('fe-macro-hint').style.display='none';
   document.getElementById('fe-autocomplete').style.display='none';
   renderFoodSuggestions(mealId);
@@ -3840,20 +3902,71 @@ function renderFoodEditorList(meal){
   }).join('')||'<div style="font-size:12px;color:var(--ink3);padding:8px 0;">Sin alimentos en esta toma.</div>';
 }
 
+// Base macros per 100g — stored when user selects a food
+let _feBase = null; // {kcal,prot,carb,fat} per 100g
+
+function recalcFoodMacros(){
+  if(!_feBase) return;
+  const qty = parseFloat(document.getElementById('fe-qty')?.value) || 100;
+  const unit = document.getElementById('fe-qty-unit')?.value || 'g';
+  const factor = (unit === 'unidad' || unit === 'ración') ? 1 : qty / 100;
+  const kcal = Math.round(_feBase.kcal * factor);
+  const prot = Math.round(_feBase.prot * factor * 10) / 10;
+  const carb = Math.round(_feBase.carb * factor * 10) / 10;
+  const fat  = Math.round(_feBase.fat  * factor * 10) / 10;
+  const setV = (id, v) => { const el=document.getElementById(id); if(el) el.value=v; };
+  setV('fe-new-kcal', kcal);
+  setV('fe-new-prot', prot);
+  setV('fe-new-carb', carb);
+  setV('fe-new-fat',  fat);
+  // Live kcal display
+  const live = document.getElementById('fe-qty-kcal-live');
+  if(live) live.textContent = kcal + ' kcal';
+  // Update chip highlights
+  const chips = document.querySelectorAll('#fe-qty-chips button');
+  chips.forEach(c => {
+    const isActive = parseInt(c.textContent) === qty && unit === 'g';
+    c.style.borderColor    = isActive ? 'var(--fuerza-br)' : '';
+    c.style.background     = isActive ? 'var(--fuerza-bg)' : 'var(--surf)';
+    c.style.color          = isActive ? 'var(--fuerza)'    : 'var(--ink3)';
+    c.style.fontWeight     = isActive ? '600' : '400';
+  });
+}
+
+function setFoodQty(val){
+  const inp = document.getElementById('fe-qty');
+  const unit = document.getElementById('fe-qty-unit');
+  if(inp){ inp.value = val; }
+  if(unit){ unit.value = 'g'; }
+  recalcFoodMacros();
+}
+
 function addFoodItem(){
   const name=document.getElementById('fe-new-name').value.trim();
   if(!name||!feCurrentMealId) return;
+  const qty = parseFloat(document.getElementById('fe-qty')?.value) || 100;
+  const unit = document.getElementById('fe-qty-unit')?.value || 'g';
   const kcal=parseFloat(document.getElementById('fe-new-kcal').value)||0;
   const prot=parseFloat(document.getElementById('fe-new-prot').value)||0;
   const carb=parseFloat(document.getElementById('fe-new-carb').value)||0;
   const fat=parseFloat(document.getElementById('fe-new-fat').value)||0;
-  const newItem={id:'custom_'+feCurrentMealId+'_'+Date.now(),name,kcal,prot,carb,fat};
+  // Include quantity in the display name if not 100g
+  const displayName = (qty !== 100 || unit !== 'g') ? name + ' (' + qty + unit + ')' : name;
+  const newItem={id:'custom_'+feCurrentMealId+'_'+Date.now(),name:displayName,kcal,prot,carb,fat};
   const existing=getCustomItems(feCurrentMealId);
   existing.push(newItem);
   saveCustomItems(feCurrentMealId,existing);
   ['fe-new-name','fe-new-kcal','fe-new-prot','fe-new-carb','fe-new-fat'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
+  // Reset quantity to 100g
+  const qtyEl = document.getElementById('fe-qty');
+  if(qtyEl) qtyEl.value = 100;
+  const unitEl = document.getElementById('fe-qty-unit');
+  if(unitEl) unitEl.value = 'g';
+  const live = document.getElementById('fe-qty-kcal-live');
+  if(live) live.textContent = '—';
+  _feBase = null;
   document.getElementById('fe-macro-hint').style.display='none';
   const meal=MEALS_CACHE.find(m=>m.id===feCurrentMealId);
   if(meal) renderFoodEditorList(meal);
