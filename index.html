@@ -3674,7 +3674,7 @@ function foodAutocomplete(q){
   const qLow = q.toLowerCase();
   const localMatches = Object.entries(FOOD_DB)
     .filter(([name]) => name.toLowerCase().includes(qLow))
-    .slice(0, 5);
+    .slice(0, 4);
 
   renderAutocompleteResults(localMatches.map(([name,d]) => ({
     name, kcal: d.kcal, prot: d.prot, carb: d.carb, fat: d.fat||0, emoji: d.emoji||'🍽️', source:'local'
@@ -3682,32 +3682,36 @@ function foodAutocomplete(q){
 
   // 2. Query Open Food Facts after 400ms debounce
   clearTimeout(_acTimer);
-  _acTimer = setTimeout(() => searchOpenFoodFacts(q), 400);
+  _acTimer = setTimeout(() => searchOpenFoodFacts(q), 250);
 }
 
+let _offController = null;
 async function searchOpenFoodFacts(q){
   const box = document.getElementById('fe-autocomplete');
+  // Cancel any in-flight request
+  if(_offController) _offController.abort();
+  _offController = new AbortController();
   try {
     // Show loading indicator
     const loadingEl = document.getElementById('fe-ac-loading');
     if(loadingEl) loadingEl.style.display = 'flex';
 
-    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=10&lc=es&cc=es&fields=product_name,product_name_es,product_name_en,brands,nutriments`;
-    const res = await fetch(url);
+    const url = `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(q)}&page_size=6&lc=es&cc=es&fields=product_name,product_name_es,brands,nutriments_estimated`;
+    const res = await fetch(url, { signal: _offController.signal });
     const data = await res.json();
 
     if(!data.products || !data.products.length) return;
 
     // Filter and clean results — only include ones with valid kcal data
     const apiResults = data.products
-      .filter(p => p.product_name && p.nutriments?.['energy-kcal_100g'])
+      .filter(p => p.product_name && (p.nutriments_estimated?.['energy-kcal_100g'] || p.nutriments?.['energy-kcal_100g']))
       .slice(0, 6)
       .map(p => ({
-        name: (p.product_name_es || p.product_name || p.product_name_en || '').split(',')[0].trim() + (p.brands ? ` (${p.brands.split(',')[0].trim()})` : ''),
-        kcal: Math.round(p.nutriments['energy-kcal_100g']),
-        prot: Math.round((p.nutriments.proteins_100g||0) * 10) / 10,
-        carb: Math.round((p.nutriments.carbohydrates_100g||0) * 10) / 10,
-        fat:  Math.round((p.nutriments.fat_100g||0) * 10) / 10,
+        name: (p.product_name_es || p.product_name || '').split(',')[0].trim() + (p.brands ? ` (${p.brands.split(',')[0].trim()})` : ''),
+        kcal: Math.round((p.nutriments_estimated?.['energy-kcal_100g'] || p.nutriments?.['energy-kcal_100g'] || 0)),
+        prot: Math.round(((p.nutriments_estimated?.proteins_100g || p.nutriments?.proteins_100g)||0) * 10) / 10,
+        carb: Math.round(((p.nutriments_estimated?.carbohydrates_100g || p.nutriments?.carbohydrates_100g)||0) * 10) / 10,
+        fat:  Math.round(((p.nutriments_estimated?.fat_100g || p.nutriments?.fat_100g)||0) * 10) / 10,
         emoji: '🏷️',
         source: 'off',
         per: 'por 100g'
@@ -3722,7 +3726,9 @@ async function searchOpenFoodFacts(q){
 
     renderAutocompleteResults([...localMatches, ...apiResults], false);
   } catch(e) {
-    // API failed silently — local results already shown
+    if(e.name !== 'AbortError'){
+      // API failed silently — local results already shown
+    }
   }
 }
 
