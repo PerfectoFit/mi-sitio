@@ -2020,7 +2020,18 @@ function resetProfile(){
 ══════════════════════════════════ */
 let P={}; // profile
 let wkOff=0,editMode=false,wkData={},selKey=null;
-let pType=null,pSub=null,mCtx=null;
+let pType=null,pSub=null,mCtx=null,pMultiMode=false;
+let customWorkouts={};
+try{customWorkouts=JSON.parse(localStorage.getItem('fp_cwk')||'{}');}catch(e){}
+
+function getActivities(key,i){
+  const raw=wkData[key];
+  if(raw){if(Array.isArray(raw))return raw;if(raw.type)return[raw];}
+  const days=buildDefaultPlan(P);
+  return[days[i]||{type:'descanso',sub:'Descanso activo',time:''}];
+}
+function setActivities(key,arr){wkData[key]=arr;persist();}
+function persistCWK(){localStorage.setItem('fp_cwk',JSON.stringify(customWorkouts));}
 let checks=JSON.parse(localStorage.getItem('fp_checks')||'{}');
 let wlog=JSON.parse(localStorage.getItem('fp_wlog')||'[]');
 let exWeights=JSON.parse(localStorage.getItem('fp_exw')||'{}');
@@ -3002,26 +3013,38 @@ function renderTraining(){
   `;
   const g=document.getElementById('week-grid');g.innerHTML='';
   days.forEach((d,i)=>{
-    const key=fmt(d),e=entry(key,i);
+    const key=fmt(d);
+    const acts=getActivities(key,i);
+    const e=acts[0]; // primary activity for legacy compat
     const isT=d.getTime()===today.getTime(),isSel=selKey===key;
     const c=document.createElement('div');
     c.className='day-card'+(isSel?' sel':'')+(isT?' today-c':'');
     c.onclick=()=>cardClick(key,i,d,e);
-    const tCls={padel:'at-padel',fuerza:'at-fuerza',descanso:'at-descanso',libre:'at-libre'}[e.type];
-    const tTxt={padel:'Pádel',fuerza:'Fuerza',descanso:'Descanso',libre:'Libre'}[e.type];
+    const tCls={padel:'at-padel',fuerza:'at-fuerza',descanso:'at-descanso',libre:'at-libre',custom:'at-libre'};
+    const tTxt={padel:'Pádel',fuerza:'Fuerza',descanso:'Descanso',libre:'Libre',custom:'Libre'};
     const hasC=P.trains&&P.trains.includes('cardio');
     const cardioDone=hasC?CARDIO_OPTS.filter(o=>(cardioChecks[key]||{})[o.id]).length:0;
+    // Progress bar from first fuerza/custom activity
     let prog='';
-    if(e.type==='fuerza'){
-      const fd=FD[e.sub]||FD['Tren superior'];
-      const done=fd.ex.filter(x=>(exChecks[key]||{})[exId(e.sub,x.n)]).length;
+    const fuAct=acts.find(a=>a.type==='fuerza');
+    const cuAct=acts.find(a=>a.type==='custom');
+    if(fuAct){
+      const fd=FD[fuAct.sub]||FD['Tren superior'];
+      const done=fd.ex.filter(x=>(exChecks[key]||{})[exId(fuAct.sub,x.n)]).length;
       prog=`<div class="dc-prog"><div class="dc-prog-fill" style="width:${Math.round(done/fd.ex.length*100)}%"></div></div>`;
+    } else if(cuAct){
+      const cwk=customWorkouts[key]||{exercises:[]};
+      const total=cwk.exercises.length;
+      const done=total?cwk.exercises.filter(x=>(exChecks[key]||{})[exId('custom',x.n)]).length:0;
+      if(total) prog=`<div class="dc-prog"><div class="dc-prog-fill" style="width:${Math.round(done/total*100)}%"></div></div>`;
     }
+    // Build activity tags (max 2 visible + dots indicator)
+    const actTags = acts.map(a=>`<div class="atag ${tCls[a.type]||'at-descanso'}">${tTxt[a.type]||a.type}</div>`).join('');
     c.innerHTML=`
       <div class="dc-name">${DS[i===6?0:i+1]}</div>
       <div class="dc-num${isT?' tn':''}">${d.getDate()}</div>
-      <div class="atag ${tCls}">${tTxt}</div>
-      ${hasC?`<div class="atag at-cardio">🏃 Cardio${cardioDone?' ✓':''}</div>`:''}
+      ${actTags}
+      ${hasC&&acts.some(a=>a.type!=='descanso')?`<div class="atag at-cardio">🏃 Cardio${cardioDone?' ✓':''}</div>`:''}
       <div class="dc-sub">${e.time||''}</div>
       ${prog}
     `;
@@ -3032,7 +3055,7 @@ function renderTraining(){
 function cardClick(key,i,date,e){
   if(editMode){openModal(key,i,date);return;}
   if(selKey===key){selKey=null;document.getElementById('detail-panel').classList.remove('show');renderTraining();return;}
-  selKey=key;renderTraining();showDetail(key,i,date,e);
+  selKey=key;renderTraining();showDetailMulti(key,i,date);
 }
 
 /* ── Store swapped exercise names per session key ── */
@@ -3161,6 +3184,13 @@ document.addEventListener('click', function(e){
   if(reset){
     e.stopPropagation();
     _resetAltByKey(reset.dataset.rk);
+    return;
+  }
+  const libItem = e.target.closest('._lib-day-item');
+  if(libItem){
+    const sheet = document.getElementById('hist-sheet');
+    const dk = sheet ? sheet.dataset.libDk : null;
+    if(dk) addLibExToDay(dk, libItem.dataset.n);
   }
 });
 
@@ -3200,6 +3230,194 @@ function toggleCardioChk(optId,dk){
   if(idx>=0)showDetail(selKey,idx,days[idx],entry(selKey,idx));
   renderTraining();
 }
+
+/* ════ MULTI-ACTIVITY DETAIL ════ */
+function showDetailMulti(key, i, date){
+  const acts = getActivities(key, i);
+  // Build a combined detail panel with one block per activity
+  const ds = DAYS[i===6?0:i+1]+', '+date.getDate()+' de '+MON[date.getMonth()];
+  const dk = fmt(date);
+  const hasCardio = P.trains && P.trains.includes('cardio');
+  const cardioDone = hasCardio ? CARDIO_OPTS.filter(o=>(cardioChecks[dk]||{})[o.id]).length : 0;
+
+  // Cardio block (always shown if user trains cardio)
+  const cardioBlock = hasCardio ? (()=>{
+    const rows = CARDIO_OPTS.map(o=>{
+      const ck=(cardioChecks[dk]||{})[o.id];
+      return '<div class="cardio-row">'
+        +'<div class="cardio-chk'+(ck?' on':'')+'" data-oid="'+o.id+'" data-dk="'+dk+'" onclick="toggleCardioChk(this.dataset.oid,this.dataset.dk)"></div>'
+        +'<div class="cardio-name'+(ck?' done':'')+'">'+o.name+'</div>'
+        +'<div class="cardio-dur">'+o.dur+'</div>'
+        +'</div>';
+    }).join('');
+    return '<div class="cardio-block">'
+      +'<div class="cardio-block-title">🏃 Cardio · 30 min <span style="font-size:11px;font-weight:400;opacity:.7">('+cardioDone+'/'+CARDIO_OPTS.length+')</span></div>'
+      +rows
+      +'</div>';
+  })() : '';
+
+  // Build one HTML block per activity
+  let blocksHtml = acts.map((act, ai) => buildActivityBlock(act, ai, dk, date)).join('');
+
+  // "Añadir actividad" button
+  const addActBtn = `<button onclick="addActivityToDay('${key}',${i})" style="width:100%;margin-top:10px;padding:10px;border-radius:12px;border:1px dashed rgba(100,80,50,.25);background:transparent;font-size:12px;font-weight:600;color:var(--ink3);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">＋ Añadir otra actividad</button>`;
+
+  const p = document.getElementById('detail-panel');
+  p.innerHTML = `<div class="dp-hd"><div><div class="dp-title">Entrenamiento</div><div class="dp-date">${ds}</div></div><button class="dp-x" onclick="closeDetail()">×</button></div>${blocksHtml}${cardioBlock}${addActBtn}`;
+  p.classList.add('show');
+  p.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function buildActivityBlock(act, idx, dk, date){
+  const typeIco = {padel:'🎾',fuerza:'🏋️',descanso:'🌿',libre:'✦',custom:'✏️'}[act.type]||'•';
+  const typeCol = {padel:'var(--padel)',fuerza:'var(--fuerza)',descanso:'var(--moss)',libre:'var(--amber)',custom:'var(--moss)'}[act.type]||'var(--ink)';
+  const typeBg  = {padel:'var(--padel-bg)',fuerza:'var(--fuerza-bg)',descanso:'var(--moss-l)',libre:'var(--amber-l)',custom:'var(--moss-l)'}[act.type]||'var(--surf2)';
+
+  // Collapsible header
+  const blockId = 'act-block-'+idx;
+  let body = '';
+
+  if(act.type === 'fuerza'){
+    const fd = FD[act.sub]||FD['Tren superior'];
+    const done = fd.ex.filter(x=>(exChecks[dk]||{})[exId(act.sub,x.n)]).length;
+    const pct = Math.round(done/fd.ex.length*100);
+    body = getDetailInsights(act.sub,dk)
+      + '<div class="ex-section-title"><span>Ejercicios — pesos</span><span style="color:var(--fuerza)">'+pct+'%</span></div>'
+      + '<div class="ex-prog-bar"><div class="ex-prog-fill" style="width:'+pct+'%"></div></div>'
+      + fd.ex.map(x=>buildExRow(x,act.sub,dk)).join('')
+      + '<div class="dp-note-b" style="margin-top:12px">Sube el peso cuando completes todas las series con buena técnica 2 semanas seguidas.</div>';
+  } else if(act.type === 'custom'){
+    body = buildCustomWorkoutBlock(dk);
+  } else if(act.type === 'padel'){
+    const durBtns = ['60 min','90 min','120 min'].map(dur=>{
+      const isOn = act.sub === dur;
+      return '<button data-dur="'+dur+'" data-dk="'+dk+'" onclick="setPadelDur(this.dataset.dk,this.dataset.dur)" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:'+(isOn?'var(--padel-bg)':'var(--surf)')+';color:'+(isOn?'var(--padel)':'var(--ink3)')+';cursor:pointer;font-weight:'+(isOn?'700':'400')+';">'+dur+'</button>';
+    }).join('');
+    body = '<div style="padding:10px 0;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+      + '<div style="font-size:12px;color:var(--ink2);">Duración</div>'
+      + '<div style="display:flex;gap:5px;">'+durBtns+'</div></div>'
+      + '<div style="display:flex;justify-content:space-between;"><div style="font-size:12px;color:var(--ink2);">Gasto estimado</div><div style="font-size:13px;font-weight:700;color:var(--ink);">~800 kcal</div></div>'
+      + '</div>';
+  } else if(act.type === 'descanso'){
+    body = '<div class="dp-note-b">Caminata, movilidad o estiramientos. El músculo crece y se repara hoy.</div>';
+  } else {
+    body = '<div class="dp-note-b">Actividad registrada.</div>';
+  }
+
+  // Remove activity button (only if more than 1 activity)
+  return '<div style="background:var(--surf);border:1px solid var(--brd);border-radius:16px;margin-bottom:10px;overflow:hidden;">'
+    + '<div style="background:'+typeBg+';padding:11px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;" data-bid="'+blockId+'" onclick="toggleActBlock(this.dataset.bid)">'
+    + '<span style="font-size:16px;">'+typeIco+'</span>'
+    + '<div style="flex:1;font-size:13px;font-weight:700;color:'+typeCol+';">'+(act.sub||({padel:'Pádel',fuerza:'Fuerza',descanso:'Descanso',custom:'Entreno libre'}[act.type]||act.type))+'</div>'
+    + '<span style="font-size:10px;color:'+typeCol+';opacity:.7;" id="arr-'+blockId+'">▾</span>'
+    + '</div>'
+    + '<div id="'+blockId+'" style="padding:12px 14px;">'+body+'</div>'
+    + '</div>';
+}
+
+function toggleActBlock(id){
+  const el=document.getElementById(id);
+  const arr=document.getElementById('arr-'+id);
+  if(!el)return;
+  const open=el.style.display!=='none';
+  el.style.display=open?'none':'block';
+  if(arr)arr.textContent=open?'▸':'▾';
+}
+
+function setPadelDur(dk, dur){
+  const i=weekDays(wkOff).findIndex(d=>fmt(d)===dk);
+  const acts=getActivities(dk, i);
+  const p=acts.find(a=>a.type==='padel');
+  if(p) p.sub=dur;
+  setActivities(dk, acts);
+  showDetailMulti(dk, i, weekDays(wkOff)[i]);
+}
+
+function addActivityToDay(key, i){
+  pMultiMode = true;
+  openModal(key, i, weekDays(wkOff)[i]);
+}
+
+/* ════ CUSTOM WORKOUT BUILDER ════ */
+function buildCustomWorkoutBlock(dk){
+  const cwk = customWorkouts[dk] || {name:'Entreno libre', exercises:[]};
+  const exRows = cwk.exercises.map((x,xi)=>{
+    const eid = exId('custom', x.n);
+    const ck = (exChecks[dk]||{})[eid];
+    const lastKg = getLastW(eid);
+    return '<div class="ex-row">'
+      + '<div class="ex-chk'+(ck?' on':'')+'" data-eid="'+eid+'" data-dk="'+dk+'" onclick="toggleExChk(this.dataset.eid,this.dataset.dk)"></div>'
+      + '<div class="ex-info"><div class="ex-n'+(ck?' done':'')+'">'+x.n+'</div><div class="ex-s">'+x.s+'</div></div>'
+      + '<div class="ex-right">'
+      + '<input class="ex-w-inp" type="number" min="0" max="500" step="0.5" inputmode="decimal" placeholder="'+(lastKg||'kg')+'" value="'+(lastKg||'')+'" data-eid="'+eid+'" onchange="saveExW(this.dataset.eid,this.value)" onclick="event.stopPropagation()"/>'
+      + '<span class="ex-w-unit">kg</span>'
+      + '<button class="ex-hist" data-dk="'+dk+'" data-xi="'+xi+'" onclick="event.stopPropagation();removeCustomEx(this.dataset.dk,parseInt(this.dataset.xi))">✕</button>'
+      + '</div></div>';
+  }).join('');
+
+  return '<div class="ex-section-title">Ejercicios libres</div>'
+    + exRows
+    + '<div style="margin-top:10px;display:flex;gap:6px;">'
+    + '<input id="cwk-add-inp-'+dk+'" type="text" placeholder="A\u00f1adir ejercicio..." style="flex:1;background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:7px 10px;font-size:12px;color:var(--ink);outline:none;">'
+    + '<button data-dk="'+dk+'" onclick="addCustomExToDay(this.dataset.dk)" style="padding:7px 12px;border-radius:8px;border:none;background:var(--moss);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">+ A\u00f1adir</button>'
+    + '</div>'
+    + '<div style="margin-top:8px;"><button data-dk="'+dk+'" onclick="openLibraryForDay(this.dataset.dk)" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--brd2);background:var(--surf2);font-size:11px;font-weight:600;color:var(--ink2);cursor:pointer;">📚 A\u00f1adir desde biblioteca</button></div>';
+}
+
+function removeCustomEx(dk, idx){
+  if(!customWorkouts[dk]) return;
+  customWorkouts[dk].exercises.splice(idx, 1);
+  persistCWK();
+  showDetailMulti(dk, weekDays(wkOff).findIndex(d=>fmt(d)===dk), weekDays(wkOff).find(d=>fmt(d)===dk));
+}
+
+function addCustomExToDay(dk){
+  const inp = document.getElementById('cwk-add-inp-'+dk);
+  if(!inp) return;
+  const name = inp.value.trim();
+  if(!name) return;
+  if(!customWorkouts[dk]) customWorkouts[dk] = {name:'Entreno libre', exercises:[]};
+  customWorkouts[dk].exercises.push({n:name, s:'3×12'});
+  persistCWK();
+  inp.value = '';
+  showDetailMulti(dk, weekDays(wkOff).findIndex(d=>fmt(d)===dk), weekDays(wkOff).find(d=>fmt(d)===dk));
+}
+
+function openLibraryForDay(dk){
+  const names = Object.keys(EX_DB);
+  // Use data-n only, dk stored on the sheet — no inline onclick quoting issue
+  const list = names.map(n=>{
+    const safe = n.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    return '<div class="_lib-day-item" data-n="'+safe+'" style="padding:8px 12px;border-bottom:1px solid var(--brd);cursor:pointer;font-size:13px;color:var(--ink);">'+safe+'</div>';
+  }).join('');
+  document.getElementById('hs-title').textContent = 'Ejercicios · biblioteca';
+  document.getElementById('hs-body').innerHTML =
+    '<div style="margin-bottom:8px;"><input id="lib-day-search" type="text" placeholder="Buscar ejercicio..." oninput="filterLibDay(this.value)" style="width:100%;background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:8px 10px;font-size:12px;outline:none;"/></div>'
+    + '<div id="lib-day-list">'+list+'</div>';
+  document.getElementById('hist-sheet').dataset.libDk = dk;
+  document.getElementById('hist-sheet').classList.add('show');
+}
+
+function filterLibDay(q){
+  const list = document.getElementById('lib-day-list');
+  if(!list) return;
+  list.querySelectorAll('div[data-n]').forEach(el=>{
+    el.style.display = el.dataset.n.toLowerCase().includes(q.toLowerCase()) ? 'block' : 'none';
+  });
+}
+
+function addLibExToDay(dk, name){
+  if(!customWorkouts[dk]) customWorkouts[dk] = {name:'Entreno libre', exercises:[]};
+  if(!customWorkouts[dk].exercises.find(x=>x.n===name)){
+    customWorkouts[dk].exercises.push({n:name, s:'3×12'});
+    persistCWK();
+  }
+  document.getElementById('hist-sheet').classList.remove('show');
+  showDetailMulti(dk, weekDays(wkOff).findIndex(d=>fmt(d)===dk), weekDays(wkOff).find(d=>fmt(d)===dk));
+}
+
+/* ── Also update openModal to add "Entreno libre" as option ── */
 
 function showDetail(key,i,date,e){
   const type=e.type,sub=e.sub||'';
@@ -3258,8 +3476,9 @@ function openModal(key,i,date){
   const opts=[
     {t:'padel',ico:'🎾',lbl:'Pádel',cls:'sp'},
     {t:'fuerza',ico:'🏋️',lbl:'Fuerza',cls:'sf'},
+    {t:'cardio',ico:'🏃',lbl:'Cardio',cls:'sl'},
+    {t:'custom',ico:'✏️',lbl:'Entreno libre',cls:'sl'},
     {t:'descanso',ico:'🌿',lbl:'Descanso',cls:'sd'},
-    {t:'libre',ico:'✦',lbl:'Libre',cls:'sl'},
   ];
   grid.innerHTML=opts.map(o=>`<button class="topt" id="op-${o.t}" onclick="pickType('${o.t}')"><span class="tico">${o.ico}</span>${o.lbl}</button>`).join('');
   ['sup','inf','fb'].forEach(s=>document.getElementById('sub-'+s).classList.remove('chosen'));
@@ -3272,13 +3491,18 @@ function closeModal(){document.getElementById('modal').classList.remove('show');
 function pickType(t){
   pType=t;
   document.querySelectorAll('#modal-type-grid .topt').forEach(x=>x.className='topt');
-  const cls={padel:'sp',fuerza:'sf',descanso:'sd',libre:'sl'}[t];
+  const cls={padel:'sp',fuerza:'sf',descanso:'sd',libre:'sl',cardio:'sl',custom:'sl'}[t];
   const el=document.getElementById('op-'+t);if(el)el.classList.add(cls);
   if(t==='fuerza'){
     document.getElementById('ms1').style.display='none';
     document.getElementById('ms2').style.display='block';
     document.getElementById('btn-apply').classList.remove('ready');
-  }else{pSub=null;document.getElementById('btn-apply').classList.add('ready');}
+  }else{
+    pSub=null;
+    document.getElementById('ms1').style.display='block';
+    document.getElementById('ms2').style.display='none';
+    document.getElementById('btn-apply').classList.add('ready');
+  }
 }
 function backStep(){
   pType=null;pSub=null;
@@ -3297,7 +3521,7 @@ function pickSub(s){
 function applyModal(){
   if(!pType||!mCtx)return;if(pType==='fuerza'&&!pSub)return;
   const{key,i}=mCtx,we=i>=5;
-  const sm={padel:'Partido 90 min',descanso:'Descanso activo',libre:''};
+  const sm={padel:'Partido 90 min',descanso:'Descanso activo',libre:'',cardio:'Cardio 30 min',custom:'Entreno libre'};
   const sub=pType==='fuerza'?pSub:(sm[pType]||'');
   wkData[key]={type:pType,sub,time:['padel','fuerza'].includes(pType)?(we?'mañana':'18–19 h'):''};
   persist();closeModal();closeDetail();renderTraining();
