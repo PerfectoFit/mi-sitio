@@ -3126,6 +3126,7 @@ function buildExRow(x, sub, dateKey){
       ${showPR?`<span class="ex-pr">PR</span>`:''}
       <input class="ex-w-inp" type="number" min="0" max="500" step="0.5" inputmode="decimal"
         placeholder="${lastKg||'kg'}" value="${lastKg||''}"
+        ${(dateKey!==fmt(new Date())&&lastKg)?'readonly style="opacity:.5;cursor:not-allowed;background:var(--surf3);" title="Registro bloqueado"':''}
         onchange="saveExW('${activeEid}',this.value)" onclick="event.stopPropagation()"/>
       <span class="ex-w-unit">kg</span>
       ${altBtn}
@@ -3217,17 +3218,22 @@ function showExSwapToast(msg){
 }
 
 function toggleExChk(eid,dk){
+  const isPastDay = dk!==fmt(new Date());
+  // Past day: can ADD (check unchecked) but cannot REMOVE (uncheck checked)
+  if(isPastDay && (exChecks[dk]||{})[eid]===true){return;}
   if(!exChecks[dk])exChecks[dk]={};
   exChecks[dk][eid]=!exChecks[dk][eid];persist();
   const days=weekDays(wkOff);const idx=days.findIndex(d=>fmt(d)===selKey);
-  if(idx>=0)showDetail(selKey,idx,days[idx],entry(selKey,idx));
+  if(idx>=0)showDetailMulti(selKey,idx,days[idx]);
   renderTraining();
 }
 function toggleCardioChk(optId,dk){
+  // Past day: can add but not remove
+  if(dk!==fmt(new Date()) && (cardioChecks[dk]||{})[optId]===true){return;}
   if(!cardioChecks[dk])cardioChecks[dk]={};
   cardioChecks[dk][optId]=!cardioChecks[dk][optId];persist();
   const days=weekDays(wkOff);const idx=days.findIndex(d=>fmt(d)===selKey);
-  if(idx>=0)showDetail(selKey,idx,days[idx],entry(selKey,idx));
+  if(idx>=0)showDetailMulti(selKey,idx,days[idx]);
   renderTraining();
 }
 
@@ -3275,6 +3281,7 @@ function buildActivityBlock(act, idx, dk, date){
 
   // Collapsible header
   const blockId = 'act-block-'+idx;
+  const isPast = dk !== fmt(new Date());
   let body = '';
 
   if(act.type === 'fuerza'){
@@ -3310,6 +3317,7 @@ function buildActivityBlock(act, idx, dk, date){
     + '<div style="background:'+typeBg+';padding:11px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;" data-bid="'+blockId+'" onclick="toggleActBlock(this.dataset.bid)">'
     + '<span style="font-size:16px;">'+typeIco+'</span>'
     + '<div style="flex:1;font-size:13px;font-weight:700;color:'+typeCol+';">'+(act.sub||({padel:'Pádel',fuerza:'Fuerza',descanso:'Descanso',custom:'Entreno libre'}[act.type]||act.type))+'</div>'
+    + (isPast?'<span style="font-size:9px;background:var(--surf3);color:var(--ink3);padding:1px 7px;border-radius:10px;margin-right:4px;">🔒</span>':'')
     + '<span style="font-size:10px;color:'+typeCol+';opacity:.7;" id="arr-'+blockId+'">▾</span>'
     + '</div>'
     + '<div id="'+blockId+'" style="padding:12px 14px;">'+body+'</div>'
@@ -3519,12 +3527,26 @@ function pickSub(s){
   document.getElementById('btn-apply').classList.add('ready');
 }
 function applyModal(){
-  if(!pType||!mCtx)return;if(pType==='fuerza'&&!pSub)return;
+  if(!pType||!mCtx)return;
+  if(pType==='fuerza'&&!pSub)return;
+  if(pType==='custom'){
+    if(!customWorkouts[mCtx.key]) customWorkouts[mCtx.key]={name:'Entreno libre',exercises:[]};
+    persistCWK();
+  }
   const{key,i}=mCtx,we=i>=5;
   const sm={padel:'Partido 90 min',descanso:'Descanso activo',libre:'',cardio:'Cardio 30 min',custom:'Entreno libre'};
-  const sub=pType==='fuerza'?pSub:(sm[pType]||'');
-  wkData[key]={type:pType,sub,time:['padel','fuerza'].includes(pType)?(we?'mañana':'18–19 h'):''};
-  persist();closeModal();closeDetail();renderTraining();
+  const sub=pType==='fuerza'?pSub:(sm[pType]||'')
+  const newAct={type:pType,sub,time:['padel','fuerza','custom','cardio'].includes(pType)?(we?'ma\u00f1ana':'18\u201319 h'):''};  
+  if(pMultiMode){
+    const existing=getActivities(key,i).filter(a=>a.type!=='descanso');
+    const dup=existing.some(a=>a.type===pType&&(pType!=='fuerza'||a.sub===sub));
+    if(!dup) existing.push(newAct);
+    setActivities(key,existing.length?existing:[newAct]);
+  } else {
+    setActivities(key,[newAct]);
+  }
+  pMultiMode=false;
+  closeModal();closeDetail();renderTraining();
 }
 
 /* ─── HIST ─── */
