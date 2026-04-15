@@ -1671,77 +1671,95 @@ body {
 
     <div id="fe-items-list"></div>
 
-    <!-- Add new item -->
-    <div style="margin-top:14px;background:var(--surf2);border-radius:12px;padding:14px;border:1px solid var(--brd2);">
-      <div style="font-size:12px;font-weight:600;color:var(--ink2);margin-bottom:10px;">+ Añadir alimento</div>
+    <!-- Add new item — 3 modos -->
+    <div style="margin-top:14px;">
 
-      <!-- Name with autocomplete -->
-      <div style="position:relative;margin-bottom:8px;">
-        <input id="fe-new-name" type="text" placeholder="Escribe un alimento..." autocomplete="off"
-          style="width:100%;background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:10px 12px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--ink);outline:none;"
-          oninput="foodAutocomplete(this.value)" onblur="setTimeout(()=>document.getElementById('fe-autocomplete').style.display='none',200)"/>
-        <div id="fe-autocomplete" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf);border:1px solid var(--brd2);border-radius:0 0 8px 8px;z-index:999;max-height:180px;overflow-y:auto;box-shadow:var(--sh2);"></div>
+      <!-- Tabs -->
+      <div style="display:flex;gap:5px;margin-bottom:10px;">
+        <button onclick="feTab('ia')" id="fe-tab-ia" style="flex:1;padding:8px 4px;border-radius:9px;border:1px solid var(--fuerza-br);background:var(--fuerza-bg);color:var(--fuerza);font-size:11px;font-weight:700;cursor:pointer;">✦ IA libre</button>
+        <button onclick="feTab('fav')" id="fe-tab-fav" style="flex:1;padding:8px 4px;border-radius:9px;border:1px solid var(--brd2);background:var(--surf2);color:var(--ink3);font-size:11px;font-weight:600;cursor:pointer;">Habituales</button>
+        <button onclick="feTab('buscar')" id="fe-tab-buscar" style="flex:1;padding:8px 4px;border-radius:9px;border:1px solid var(--brd2);background:var(--surf2);color:var(--ink3);font-size:11px;font-weight:600;cursor:pointer;">Buscar</button>
       </div>
 
-      <!-- Cantidad + chips rápidos -->
-      <div style="background:var(--fuerza-bg);border:1px solid var(--fuerza-br);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <div>
-            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--fuerza);margin-bottom:3px;text-transform:uppercase;font-weight:700;">Cantidad</div>
-            <div style="display:flex;align-items:center;gap:5px;">
-              <input id="fe-qty" type="number" value="100" min="1" max="2000" step="5" inputmode="decimal"
-                style="width:70px;background:var(--surf);border:1.5px solid var(--fuerza-br);border-radius:8px;padding:7px 8px;font-size:14px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;color:var(--fuerza);outline:none;text-align:center;"
-                oninput="recalcFoodMacros()"/>
-              <select id="fe-qty-unit" onchange="recalcFoodMacros()"
-                style="background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:7px 8px;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--ink);outline:none;">
-                <option value="g">g</option>
-                <option value="ml">ml</option>
-                <option value="unidad">unidad</option>
-                <option value="ración">ración</option>
-              </select>
-            </div>
+      <!-- ═ MODO IA ═ -->
+      <div id="fe-pane-ia" style="background:var(--surf2);border-radius:12px;padding:14px;border:1px solid var(--fuerza-br);">
+        <div style="margin-bottom:8px;">
+          <textarea id="fe-ai-text" rows="3" placeholder="Describe lo que has comido... ej: pollo a la plancha 200g con arroz 150g"
+            style="width:100%;background:var(--surf);border:1.5px solid var(--fuerza-br);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink);outline:none;resize:none;line-height:1.5;"></textarea>
+        </div>
+        <!-- Ejemplos rápidos -->
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;" id="fe-ai-examples">
+          <button onclick="feSetEx('pollo a la plancha 200g con arroz 150g')" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;">🍗 Pollo+arroz</button>
+          <button onclick="feSetEx('tortilla 2 huevos con tostada integral')" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;">🍳 Tortilla</button>
+          <button onclick="feSetEx('ensalada mixta con atún y aceite de oliva')" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;">🥗 Ensalada atún</button>
+          <button onclick="feSetEx('batido proteína 1 scoop con leche 250ml')" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;">🥛 Batido</button>
+          <button onclick="feSetEx('menú del día: lentejas, filete de ternera, pan y fruta')" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;">🍽️ Menú del día</button>
+        </div>
+        <button onclick="feAnalyzeAI()" id="fe-ai-btn"
+          style="width:100%;padding:10px;border-radius:9px;border:none;background:var(--fuerza);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Analizar con IA →</button>
+        <!-- Loading -->
+        <div id="fe-ai-loading" style="display:none;align-items:center;gap:8px;padding:10px 0;font-size:12px;color:var(--ink3);">
+          <div style="width:14px;height:14px;border-radius:50%;border:2px solid var(--brd2);border-top-color:var(--fuerza);animation:spin .7s linear infinite;flex-shrink:0;"></div>
+          Analizando con IA...
+        </div>
+        <!-- Result -->
+        <div id="fe-ai-result" style="display:none;margin-top:10px;">
+          <div style="background:var(--fuerza-bg);border:1px solid var(--fuerza-br);border-radius:9px;padding:10px 12px;margin-bottom:8px;">
+            <div style="font-size:12px;font-weight:700;color:var(--fuerza);margin-bottom:2px;" id="fe-ai-res-title"></div>
+            <div style="display:flex;gap:5px;margin-top:6px;" id="fe-ai-res-macros"></div>
           </div>
-          <div style="flex:1;text-align:right;">
-            <div style="font-size:18px;font-weight:800;color:var(--fuerza);letter-spacing:-.5px;" id="fe-qty-kcal-live">—</div>
-            <div style="font-size:9px;color:var(--ink3);font-weight:500;">kcal totales</div>
+          <!-- Cantidad -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div style="font-size:11px;color:var(--ink3);font-weight:600;">Cantidad:</div>
+            <input id="fe-qty" type="number" value="1" min="0.1" max="5" step="0.1" inputmode="decimal"
+              style="width:60px;background:var(--surf);border:1.5px solid var(--fuerza-br);border-radius:8px;padding:6px 8px;font-size:14px;font-weight:700;color:var(--fuerza);outline:none;text-align:center;"
+              oninput="feRecalcAI()"/>
+            <span style="font-size:12px;color:var(--ink3);">× ración</span>
+            <div id="fe-qty-kcal-live" style="margin-left:auto;font-size:15px;font-weight:800;color:var(--fuerza);">—</div>
           </div>
-        </div>
-        <!-- Quick chips -->
-        <div style="display:flex;gap:5px;flex-wrap:wrap;" id="fe-qty-chips">
-          <button onclick="setFoodQty(50)"  style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">50g</button>
-          <button onclick="setFoodQty(75)"  style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">75g</button>
-          <button onclick="setFoodQty(100)" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--fuerza-br);background:var(--fuerza-bg);color:var(--fuerza);cursor:pointer;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;" id="fe-chip-100">100g</button>
-          <button onclick="setFoodQty(150)" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">150g</button>
-          <button onclick="setFoodQty(200)" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">200g</button>
-          <button onclick="setFoodQty(250)" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">250g</button>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;" id="fe-qty-chips">
+            <button onclick="feSetQtyMult(0.5)" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;">½</button>
+            <button onclick="feSetQtyMult(1)"   style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--fuerza-br);background:var(--fuerza-bg);color:var(--fuerza);cursor:pointer;font-weight:700;">1×</button>
+            <button onclick="feSetQtyMult(1.5)" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;">1.5×</button>
+            <button onclick="feSetQtyMult(2)"   style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink3);cursor:pointer;">2×</button>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="feSaveHabitual()" style="padding:8px 12px;border-radius:9px;border:1px solid var(--brd2);background:var(--surf);color:var(--ink2);font-size:11px;font-weight:600;cursor:pointer;">☆ Guardar</button>
+            <button onclick="feAddFromAI()" style="flex:1;padding:9px;border-radius:9px;border:none;background:var(--moss);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Añadir a esta toma</button>
+          </div>
         </div>
       </div>
 
-      <!-- Macros (se recalculan) -->
-      <div style="display:flex;gap:8px;margin-bottom:8px;">
-        <div style="flex:1;">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--ink3);margin-bottom:3px;text-transform:uppercase;">kcal</div>
-          <input id="fe-new-kcal" type="number" placeholder="0" inputmode="numeric"
-            style="width:100%;background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:8px 10px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--ink);outline:none;"/>
-        </div>
-        <div style="flex:1;">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--ink3);margin-bottom:3px;text-transform:uppercase;">prot g</div>
-          <input id="fe-new-prot" type="number" placeholder="0" inputmode="decimal"
-            style="width:100%;background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:8px 10px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--ink);outline:none;"/>
-        </div>
-        <div style="flex:1;">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--ink3);margin-bottom:3px;text-transform:uppercase;">carb g</div>
-          <input id="fe-new-carb" type="number" placeholder="0" inputmode="decimal"
-            style="width:100%;background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:8px 10px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--ink);outline:none;"/>
-        </div>
-        <div style="flex:1;">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--ink3);margin-bottom:3px;text-transform:uppercase;">grasas g</div>
-          <input id="fe-new-fat" type="number" placeholder="0" inputmode="decimal"
-            style="width:100%;background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:8px 10px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--ink);outline:none;"/>
-        </div>
+      <!-- ═ MODO HABITUALES ═ -->
+      <div id="fe-pane-fav" style="display:none;background:var(--surf2);border-radius:12px;padding:14px;border:1px solid var(--brd2);">
+        <div style="font-size:11px;color:var(--ink3);margin-bottom:10px;">Toca para añadir directamente</div>
+        <div id="fe-fav-list"></div>
+        <div style="font-size:11px;color:var(--ink4);text-align:center;margin-top:8px;">Guarda comidas desde IA para que aparezcan aquí</div>
       </div>
-      <div id="fe-macro-hint" style="font-size:11px;color:var(--moss);margin-bottom:10px;display:none;background:var(--moss-l);border-radius:7px;padding:6px 10px;"></div>
-      <button onclick="addFoodItem()" style="width:100%;padding:11px;border-radius:9px;border:none;background:var(--moss);color:#fff;font-size:13px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;">Añadir a esta toma</button>
+
+      <!-- ═ MODO BUSCAR ═ -->
+      <div id="fe-pane-buscar" style="display:none;background:var(--surf2);border-radius:12px;padding:14px;border:1px solid var(--brd2);">
+        <div style="position:relative;margin-bottom:8px;">
+          <input id="fe-new-name" type="text" placeholder="Escribe un alimento..." autocomplete="off"
+            style="width:100%;background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink);outline:none;"
+            oninput="foodAutocomplete(this.value)" onblur="setTimeout(()=>document.getElementById('fe-autocomplete').style.display='none',200)"/>
+          <div id="fe-autocomplete" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf);border:1px solid var(--brd2);border-radius:0 0 8px 8px;z-index:999;max-height:180px;overflow-y:auto;box-shadow:var(--sh2);"></div>
+        </div>
+        <!-- Macros manuales -->
+        <div style="display:flex;gap:6px;margin-bottom:8px;">
+          <div style="flex:1;"><div style="font-size:9px;color:var(--ink3);margin-bottom:3px;text-transform:uppercase;font-family:'DM Mono',monospace;">kcal</div>
+            <input id="fe-new-kcal" type="number" placeholder="0" style="width:100%;background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:8px;font-size:13px;color:var(--ink);outline:none;"/></div>
+          <div style="flex:1;"><div style="font-size:9px;color:var(--ink3);margin-bottom:3px;text-transform:uppercase;font-family:'DM Mono',monospace;">prot</div>
+            <input id="fe-new-prot" type="number" placeholder="0" style="width:100%;background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:8px;font-size:13px;color:var(--ink);outline:none;"/></div>
+          <div style="flex:1;"><div style="font-size:9px;color:var(--ink3);margin-bottom:3px;text-transform:uppercase;font-family:'DM Mono',monospace;">carb</div>
+            <input id="fe-new-carb" type="number" placeholder="0" style="width:100%;background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:8px;font-size:13px;color:var(--ink);outline:none;"/></div>
+          <div style="flex:1;"><div style="font-size:9px;color:var(--ink3);margin-bottom:3px;text-transform:uppercase;font-family:'DM Mono',monospace;">grasas</div>
+            <input id="fe-new-fat" type="number" placeholder="0" style="width:100%;background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:8px;font-size:13px;color:var(--ink);outline:none;"/></div>
+        </div>
+        <div id="fe-macro-hint" style="font-size:11px;color:var(--moss);margin-bottom:8px;display:none;background:var(--moss-l);border-radius:7px;padding:6px 10px;"></div>
+        <button onclick="addFoodItem()" style="width:100%;padding:11px;border-radius:9px;border:none;background:var(--moss);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Añadir a esta toma</button>
+      </div>
+
     </div>
   </div>
 </div>
@@ -3192,6 +3210,11 @@ document.addEventListener('click', function(e){
     const sheet = document.getElementById('hist-sheet');
     const dk = sheet ? sheet.dataset.libDk : null;
     if(dk) addLibExToDay(dk, libItem.dataset.n);
+    return;
+  }
+  const favRow = e.target.closest('._fe-fav-row');
+  if(favRow && favRow.dataset.fid){
+    _feAddFav(favRow.dataset.fid);
   }
 });
 
@@ -4101,24 +4124,23 @@ function openFoodEditor(mealId){
   const meal=MEALS_CACHE.find(m=>m.id===mealId);
   if(!meal) return;
   document.getElementById('fe-title').textContent='Editar: '+meal.name;
-  document.getElementById('fe-sub').textContent=meal.time+' · Toca un alimento sugerido o escribe el tuyo';
+  document.getElementById('fe-sub').textContent=meal.time;
+  _feAIResult=null; _feBase=null;
+  const aiText=document.getElementById('fe-ai-text'); if(aiText) aiText.value='';
+  const aiRes=document.getElementById('fe-ai-result'); if(aiRes) aiRes.style.display='none';
+  const aiLoad=document.getElementById('fe-ai-loading'); if(aiLoad) aiLoad.style.display='none';
   ['fe-new-name','fe-new-kcal','fe-new-prot','fe-new-carb','fe-new-fat'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
-  _feBase = null;
-  const qtyEl = document.getElementById('fe-qty');
-  if(qtyEl) qtyEl.value = 100;
-  const unitEl = document.getElementById('fe-qty-unit');
-  if(unitEl) unitEl.value = 'g';
-  const liveEl = document.getElementById('fe-qty-kcal-live');
-  if(liveEl) liveEl.textContent = '—';
-  document.getElementById('fe-macro-hint').style.display='none';
-  document.getElementById('fe-autocomplete').style.display='none';
+  const qtyEl=document.getElementById('fe-qty'); if(qtyEl) qtyEl.value=1;
+  const liveEl=document.getElementById('fe-qty-kcal-live'); if(liveEl) liveEl.textContent='—';
+  const mh=document.getElementById('fe-macro-hint'); if(mh) mh.style.display='none';
+  const ac=document.getElementById('fe-autocomplete'); if(ac) ac.style.display='none';
+  feTab('ia');
   renderFoodSuggestions(mealId);
   renderFoodEditorList(meal);
   document.getElementById('food-editor-sheet').classList.add('show');
 }
-
 function renderFoodEditorList(meal){
   const customItems=getCustomItems(meal.id);
   const list=document.getElementById('fe-items-list');
@@ -4149,43 +4171,188 @@ function renderFoodEditorList(meal){
 }
 
 // Base macros per 100g — stored when user selects a food
-let _feBase = null; // {kcal,prot,carb,fat} per 100g
+/* ════ FOOD EDITOR — NUEVO SISTEMA 3 MODOS ════ */
 
-function recalcFoodMacros(){
-  if(!_feBase) return;
-  const qty = parseFloat(document.getElementById('fe-qty')?.value) || 100;
-  const unit = document.getElementById('fe-qty-unit')?.value || 'g';
-  const factor = (unit === 'unidad' || unit === 'ración') ? 1 : qty / 100;
-  const kcal = Math.round(_feBase.kcal * factor);
-  const prot = Math.round(_feBase.prot * factor * 10) / 10;
-  const carb = Math.round(_feBase.carb * factor * 10) / 10;
-  const fat  = Math.round(_feBase.fat  * factor * 10) / 10;
-  const setV = (id, v) => { const el=document.getElementById(id); if(el) el.value=v; };
-  setV('fe-new-kcal', kcal);
-  setV('fe-new-prot', prot);
-  setV('fe-new-carb', carb);
-  setV('fe-new-fat',  fat);
-  // Live kcal display
-  const live = document.getElementById('fe-qty-kcal-live');
-  if(live) live.textContent = kcal + ' kcal';
-  // Update chip highlights
-  const chips = document.querySelectorAll('#fe-qty-chips button');
-  chips.forEach(c => {
-    const isActive = parseInt(c.textContent) === qty && unit === 'g';
-    c.style.borderColor    = isActive ? 'var(--fuerza-br)' : '';
-    c.style.background     = isActive ? 'var(--fuerza-bg)' : 'var(--surf)';
-    c.style.color          = isActive ? 'var(--fuerza)'    : 'var(--ink3)';
-    c.style.fontWeight     = isActive ? '600' : '400';
+/* Storage habituales */
+function getFavFoods(){
+  try{ return JSON.parse(localStorage.getItem('fp_fav_foods')||'[]'); }catch(e){ return []; }
+}
+function saveFavFoods(arr){ localStorage.setItem('fp_fav_foods', JSON.stringify(arr)); }
+
+/* Estado IA actual */
+let _feAIResult = null; // {title, kcal, prot, carb, fat} resultado crudo por 1 ración
+
+/* Cambiar tab del food editor */
+function feTab(tab){
+  ['ia','fav','buscar'].forEach(t=>{
+    const pane = document.getElementById('fe-pane-'+t);
+    const btn  = document.getElementById('fe-tab-'+t);
+    if(!pane||!btn) return;
+    const on = t===tab;
+    pane.style.display = on ? 'block' : 'none';
+    btn.style.background   = on ? 'var(--fuerza-bg)' : 'var(--surf2)';
+    btn.style.borderColor  = on ? 'var(--fuerza-br)' : 'var(--brd2)';
+    btn.style.color        = on ? 'var(--fuerza)'    : 'var(--ink3)';
+    btn.style.fontWeight   = on ? '700' : '600';
+  });
+  // Render fav list when switching to it
+  if(tab==='fav') feRenderFavList();
+}
+
+function feSetEx(text){
+  const ta = document.getElementById('fe-ai-text');
+  if(ta) ta.value = text;
+}
+
+async function feAnalyzeAI(){
+  const text = (document.getElementById('fe-ai-text')?.value||'').trim();
+  if(!text) return;
+  const loading = document.getElementById('fe-ai-loading');
+  const result  = document.getElementById('fe-ai-result');
+  const btn     = document.getElementById('fe-ai-btn');
+  if(loading) loading.style.display = 'flex';
+  if(result)  result.style.display  = 'none';
+  if(btn)     btn.style.display     = 'none';
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:300,
+        system:'Eres un nutricionista. El usuario describe una comida. Responde SOLO con JSON válido sin markdown: {"title":"nombre corto del plato","kcal":número,"prot":número,"carb":número,"fat":número}. Valores por ración descrita. Solo números enteros.',
+        messages:[{role:'user',content:'Estima los macros de: '+text}]
+      })
+    });
+    const data = await res.json();
+    const raw = (data.content||[]).find(b=>b.type==='text')?.text||'{}';
+    const clean = raw.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    _feAIResult = parsed;
+    feRenderAIResult(parsed, 1);
+    if(result)  result.style.display  = 'block';
+  } catch(e){
+    _feAIResult = null;
+    alert('No se pudo analizar. Inténtalo de nuevo o usa el modo Buscar.');
+  }
+  if(loading) loading.style.display = 'none';
+  if(btn)     btn.style.display     = 'block';
+}
+
+function feRenderAIResult(r, qty){
+  const titleEl  = document.getElementById('fe-ai-res-title');
+  const macrosEl = document.getElementById('fe-ai-res-macros');
+  const liveEl   = document.getElementById('fe-qty-kcal-live');
+  if(titleEl)  titleEl.textContent = r.title||'Comida analizada';
+  const kcal = Math.round((r.kcal||0)*qty);
+  const prot = Math.round((r.prot||0)*qty*10)/10;
+  const carb = Math.round((r.carb||0)*qty*10)/10;
+  const fat  = Math.round((r.fat||0)*qty*10)/10;
+  if(macrosEl) macrosEl.innerHTML = [
+    {l:'kcal',v:kcal,c:'var(--coral)'},
+    {l:'prot',v:prot+'g',c:'var(--fuerza)'},
+    {l:'carb',v:carb+'g',c:'var(--amber)'},
+    {l:'grasas',v:fat+'g',c:'var(--ink3)'},
+  ].map(m=>'<div style="flex:1;background:var(--surf);border-radius:8px;padding:6px;text-align:center;">'
+    +'<div style="font-size:14px;font-weight:800;color:'+m.c+';">'+m.v+'</div>'
+    +'<div style="font-size:9px;color:var(--ink3);text-transform:uppercase;margin-top:1px;">'+m.l+'</div>'
+    +'</div>').join('');
+  if(liveEl) liveEl.textContent = kcal+' kcal';
+}
+
+function feRecalcAI(){
+  if(!_feAIResult) return;
+  const qty = parseFloat(document.getElementById('fe-qty')?.value)||1;
+  feRenderAIResult(_feAIResult, qty);
+  // Update chips
+  document.querySelectorAll('#fe-qty-chips button').forEach(b=>{
+    const v = parseFloat(b.textContent);
+    const isOn = Math.abs(v - qty) < 0.05;
+    b.style.background  = isOn ? 'var(--fuerza-bg)' : 'var(--surf)';
+    b.style.borderColor = isOn ? 'var(--fuerza-br)' : 'var(--brd2)';
+    b.style.color       = isOn ? 'var(--fuerza)'    : 'var(--ink3)';
+    b.style.fontWeight  = isOn ? '700' : '400';
   });
 }
 
-function setFoodQty(val){
+function feSetQtyMult(mult){
   const inp = document.getElementById('fe-qty');
-  const unit = document.getElementById('fe-qty-unit');
-  if(inp){ inp.value = val; }
-  if(unit){ unit.value = 'g'; }
-  recalcFoodMacros();
+  if(inp) inp.value = mult;
+  feRecalcAI();
 }
+
+function feAddFromAI(){
+  if(!_feAIResult||!feCurrentMealId) return;
+  const qty  = parseFloat(document.getElementById('fe-qty')?.value)||1;
+  const kcal = Math.round((_feAIResult.kcal||0)*qty);
+  const prot = Math.round((_feAIResult.prot||0)*qty*10)/10;
+  const carb = Math.round((_feAIResult.carb||0)*qty*10)/10;
+  const fat  = Math.round((_feAIResult.fat||0)*qty*10)/10;
+  const label = _feAIResult.title + (qty!==1?' (×'+qty+')':'');
+  const item  = {id:'custom_'+feCurrentMealId+'_'+Date.now(),name:label,kcal,prot,carb,fat};
+  const existing = getCustomItems(feCurrentMealId);
+  existing.push(item);
+  saveCustomItems(feCurrentMealId, existing);
+  // Reset
+  const ta = document.getElementById('fe-ai-text');
+  if(ta) ta.value = '';
+  document.getElementById('fe-ai-result').style.display = 'none';
+  _feAIResult = null;
+  const meal = MEALS_CACHE.find(m=>m.id===feCurrentMealId);
+  if(meal) renderFoodEditorList(meal);
+  renderDiet();
+}
+
+function feSaveHabitual(){
+  if(!_feAIResult) return;
+  const qty  = parseFloat(document.getElementById('fe-qty')?.value)||1;
+  const entry = {
+    id: 'fav_'+Date.now(),
+    name: _feAIResult.title,
+    kcal: Math.round((_feAIResult.kcal||0)*qty),
+    prot: Math.round((_feAIResult.prot||0)*qty*10)/10,
+    carb: Math.round((_feAIResult.carb||0)*qty*10)/10,
+    fat:  Math.round((_feAIResult.fat||0)*qty*10)/10,
+  };
+  favFoods.unshift(entry);
+  if(favFoods.length > 20) favFoods = favFoods.slice(0,20);
+  localStorage.setItem('fp_fav_foods', JSON.stringify(favFoods));
+  const btn = event.target;
+  btn.textContent = '★ Guardado';
+  btn.style.color = 'var(--amber)';
+}
+
+function feRenderFavList(){
+  const list = document.getElementById('fe-fav-list');
+  if(!list) return;
+  if(!favFoods.length){
+    list.innerHTML = '<div style="font-size:12px;color:var(--ink3);text-align:center;padding:12px 0;">Aún no tienes habituales guardados.<br>Analiza comidas con IA y guárdalas.</div>';
+    return;
+  }
+  list.innerHTML = favFoods.map(f=>
+    '<div class="_fe-fav-row" style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--brd);cursor:pointer;" data-fid="'+f.id+'">'
+    +'<div style="flex:1;">'
+    +'<div style="font-size:13px;font-weight:600;color:var(--ink);">'+f.name+'</div>'
+    +'<div style="font-size:10px;color:var(--ink3);margin-top:1px;">'+f.kcal+' kcal · '+f.prot+'g P · '+f.carb+'g C · '+f.fat+'g G</div>'
+    +'</div>'
+    +'<div style="font-size:16px;color:var(--moss);font-weight:700;">＋</div>'
+    +'</div>'
+  ).join('');
+}
+
+function _feAddFav(id){
+  const f = favFoods.find(x=>x.id===id);
+  if(!f||!feCurrentMealId) return;
+  const item = {id:'custom_'+feCurrentMealId+'_'+Date.now(),name:f.name,kcal:f.kcal,prot:f.prot,carb:f.carb,fat:f.fat};
+  const existing = getCustomItems(feCurrentMealId);
+  existing.push(item);
+  saveCustomItems(feCurrentMealId, existing);
+  const meal = MEALS_CACHE.find(m=>m.id===feCurrentMealId);
+  if(meal) renderFoodEditorList(meal);
+  renderDiet();
+}
+
+/* ════ END FOOD EDITOR MODOS ════ */
 
 function addFoodItem(){
   const name=document.getElementById('fe-new-name').value.trim();
