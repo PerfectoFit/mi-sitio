@@ -4295,10 +4295,10 @@ function feRenderAIResult(r,qty){
   const macrosEl=document.getElementById('fe-ai-res-macros');
   const liveEl=document.getElementById('fe-qty-kcal-live');
   if(titleEl) titleEl.textContent=r.title||'Comida analizada';
-  const kcal=Math.round((r.kcal||0)*qty);
-  const prot=Math.round((r.prot||0)*qty*10)/10;
-  const carb=Math.round((r.carb||0)*qty*10)/10;
-  const fat=Math.round((r.fat||0)*qty*10)/10;
+  const kcal=Math.round(((r.kcal||r.k)||0)*qty);
+  const prot=Math.round(((r.prot||r.p)||0)*qty*10)/10;
+  const carb=Math.round(((r.carb||r.c)||0)*qty*10)/10;
+  const fat=Math.round(((r.fat||r.f)||0)*qty*10)/10;
   if(macrosEl) macrosEl.innerHTML=[
     {l:'kcal',v:kcal,c:'var(--coral)'},
     {l:'prot',v:prot+'g',c:'var(--fuerza)'},
@@ -4325,10 +4325,10 @@ function feSetQtyMult(mult){
 function feAddFromAI(){
   if(!_feAIResult||!feCurrentMealId)return;
   const qty=parseFloat(document.getElementById('fe-qty')?.value)||1;
-  const kcal=Math.round((_feAIResult.kcal||0)*qty);
-  const prot=Math.round((_feAIResult.prot||0)*qty*10)/10;
-  const carb=Math.round((_feAIResult.carb||0)*qty*10)/10;
-  const fat=Math.round((_feAIResult.fat||0)*qty*10)/10;
+  const kcal=Math.round(((_feAIResult.kcal||_feAIResult.k)||0)*qty);
+  const prot=Math.round(((_feAIResult.prot||_feAIResult.p)||0)*qty*10)/10;
+  const carb=Math.round(((_feAIResult.carb||_feAIResult.c)||0)*qty*10)/10;
+  const fat=Math.round(((_feAIResult.fat||_feAIResult.f)||0)*qty*10)/10;
   const label=_feAIResult.title+(qty!==1?' ('+qty+' rac.)':'');
   const item={id:'custom_'+feCurrentMealId+'_'+Date.now(),name:label,kcal,prot,carb,fat};
   const existing=getCustomItems(feCurrentMealId);
@@ -4346,10 +4346,10 @@ function feSaveHabitual(){
   if(!_feAIResult)return;
   const qty=parseFloat(document.getElementById('fe-qty')?.value)||1;
   const entry={id:'fav_'+Date.now(),name:_feAIResult.title,
-    kcal:Math.round((_feAIResult.kcal||0)*qty),
-    prot:Math.round((_feAIResult.prot||0)*qty*10)/10,
-    carb:Math.round((_feAIResult.carb||0)*qty*10)/10,
-    fat:Math.round((_feAIResult.fat||0)*qty*10)/10};
+    kcal:Math.round(((_feAIResult.kcal||_feAIResult.k)||0)*qty),
+    prot:Math.round(((_feAIResult.prot||_feAIResult.p)||0)*qty*10)/10,
+    carb:Math.round(((_feAIResult.carb||_feAIResult.c)||0)*qty*10)/10,
+    fat:Math.round(((_feAIResult.fat||_feAIResult.f)||0)*qty*10)/10};
   favFoods.unshift(entry);
   if(favFoods.length>20) favFoods=favFoods.slice(0,20);
   localStorage.setItem('fp_fav_foods',JSON.stringify(favFoods));
