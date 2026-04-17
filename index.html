@@ -2436,7 +2436,7 @@ function getMealNote(id,cfg,profile){
 }
 
 /* ─── UTILS ─── */
-function fmt(d){return d.toISOString().split('T')[0];}
+function fmt(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`;}
 function monday(off){
   const t=new Date();t.setHours(0,0,0,0);
   const dow=t.getDay(),diff=dow===0?-6:1-dow;
@@ -5268,15 +5268,27 @@ async function loadUserData(userId){
   const {data}=await sb.from('user_data').select('key,value').eq('user_id',userId);
   if(!data)return;
   data.forEach(row=>{try{
-    if(row.key==='wlog')wlog=row.value||[];
-    if(row.key==='checks')checks=row.value||{};
-    if(row.key==='exWeights')exWeights=row.value||{};
-    if(row.key==='exChecks')exChecks=row.value||{};
-    if(row.key==='cardioChecks')cardioChecks=row.value||{};
-    if(row.key==='wkData')wkData=row.value||{};
-    if(row.key==='activeSlots')activeSlotIds=row.value||null;
+    if(row.key==='wlog')          wlog=row.value||[];
+    if(row.key==='checks')        checks=row.value||{};
+    if(row.key==='exWeights')     exWeights=row.value||{};
+    if(row.key==='exChecks')      exChecks=row.value||{};
+    if(row.key==='cardioChecks')  cardioChecks=row.value||{};
+    if(row.key==='wkData')        wkData=row.value||{};
+    if(row.key==='activeSlots')   activeSlotIds=row.value||null;
+    if(row.key==='fdVariants')  { window.fdVariants=row.value||{}; localStorage.setItem('fp_fdv',JSON.stringify(window.fdVariants)); }
+    if(row.key==='customFD')    { customFD=row.value||{}; localStorage.setItem('fp_cfd',JSON.stringify(customFD)); }
+    if(row.key==='favFoods')    { favFoods=row.value||[]; localStorage.setItem('fp_fav_foods',JSON.stringify(favFoods)); }
+    if(row.key==='suplChecks')    suplChecks=row.value||{};
+    if(row.key==='suplMine')      suplMine=row.value||[];
     if(row.key==='customFoods'){const cf=row.value||{};Object.entries(cf).forEach(([id,items])=>localStorage.setItem('fp_custom_'+id,JSON.stringify(items)));}
   }catch(e){}});
+  // Also persist everything to localStorage as backup
+  localStorage.setItem('fp_wlog',JSON.stringify(wlog));
+  localStorage.setItem('fp_checks',JSON.stringify(checks));
+  localStorage.setItem('fp_exw',JSON.stringify(exWeights));
+  localStorage.setItem('fp_exc',JSON.stringify(exChecks));
+  localStorage.setItem('fp_cc',JSON.stringify(cardioChecks));
+  localStorage.setItem('fp_wkd',JSON.stringify(wkData));
 }
 
 async function syncToCloud(){
@@ -5285,10 +5297,19 @@ async function syncToCloud(){
   const cf={};
   ['desayuno','almuerzo','comida','merienda','cena','postcena'].forEach(id=>{try{cf[id]=JSON.parse(localStorage.getItem('fp_custom_'+id)||'[]');}catch(e){}});
   await sb.from('user_data').upsert([
-    {user_id:uid,key:'wlog',value:wlog},{user_id:uid,key:'checks',value:checks},
-    {user_id:uid,key:'exWeights',value:exWeights},{user_id:uid,key:'exChecks',value:exChecks},
-    {user_id:uid,key:'cardioChecks',value:cardioChecks},{user_id:uid,key:'wkData',value:wkData},
-    {user_id:uid,key:'activeSlots',value:activeSlotIds},{user_id:uid,key:'customFoods',value:cf},
+    {user_id:uid,key:'wlog',value:wlog},
+    {user_id:uid,key:'checks',value:checks},
+    {user_id:uid,key:'exWeights',value:exWeights},
+    {user_id:uid,key:'exChecks',value:exChecks},
+    {user_id:uid,key:'cardioChecks',value:cardioChecks},
+    {user_id:uid,key:'wkData',value:wkData},
+    {user_id:uid,key:'activeSlots',value:activeSlotIds},
+    {user_id:uid,key:'customFoods',value:cf},
+    {user_id:uid,key:'fdVariants',value:window.fdVariants||{}},
+    {user_id:uid,key:'customFD',value:customFD||{}},
+    {user_id:uid,key:'favFoods',value:favFoods||[]},
+    {user_id:uid,key:'suplChecks',value:suplChecks||{}},
+    {user_id:uid,key:'suplMine',value:suplMine||[]},
   ],{onConflict:'user_id,key'});
 }
 
