@@ -9,21 +9,33 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root {
-  --bg:#f4f0e8; --bg2:#ede8de; --surf:#faf8f3; --surf2:#f0ece3; --surf3:#e8e2d6;
-  --brd:rgba(100,80,50,.10); --brd2:rgba(100,80,50,.18);
-  --ink:#2c2418; --ink2:#6b5d48; --ink3:#a89880; --ink4:#c8baa8;
-  --padel:#3d7a5c; --padel-bg:#e8f2ec; --padel-br:rgba(61,122,92,.25);
-  --fuerza:#2e5fa3; --fuerza-bg:#e8eef8; --fuerza-br:rgba(46,95,163,.22);
-  --cardio:#6b4fa3; --cardio-bg:#eeebf8; --cardio-br:rgba(107,79,163,.22);
+  /* Base surfaces */
+  --bg:#f5f1eb; --bg2:#ede8de; --surf:#ffffff; --surf2:#f0ece3; --surf3:#e8e2d6;
+  --brd:rgba(100,80,50,.08); --brd2:rgba(100,80,50,.15);
+
+  /* Text */
+  --ink:#1a1612; --ink2:#5a4a38; --ink3:#9a8870; --ink4:#c8baa8;
+
+  /* Activity colours */
+  --padel:#2e6b3e; --padel-bg:#e8f4ec; --padel-br:rgba(46,107,62,.22);
+  --fuerza:#1e4f8f; --fuerza-bg:#e3edf9; --fuerza-br:rgba(30,79,143,.2);
+  --cardio:#5a3f9a; --cardio-bg:#edeaf8; --cardio-br:rgba(90,63,154,.2);
   --desc:#7a6040; --desc-bg:#f2ece0; --desc-br:rgba(122,96,64,.22);
   --libre:#884466; --libre-bg:#f5eaf0; --libre-br:rgba(136,68,102,.22);
-  --coral:#d4603a; --coral-l:#f8ebe5; --coral-br:rgba(212,96,58,.28);
-  --moss:#4a7c59; --moss-l:#e6f0ea;
-  --amber:#c08030; --amber-l:#fdf3e3;
-  --r:14px; --rs:9px; --nav-h:64px; --top-h:56px;
-  --sh:0 2px 10px rgba(60,40,20,.07); --sh2:0 4px 20px rgba(60,40,20,.13);
-  /* Desktop sidebar */
-  --sidebar-w: 220px;
+
+  /* Brand */
+  --coral:#c85a2a; --coral-l:#fdf0ea; --coral-br:rgba(200,90,42,.25);
+  --moss:#3d6e4a; --moss-l:#e6f2ea;
+  --amber:#b07820; --amber-l:#fdf3e3;
+
+  /* Elevation shadows — upgraded for depth */
+  --sh:0 1px 0 rgba(100,80,50,.07),0 2px 8px rgba(100,80,50,.07);
+  --sh2:0 1px 0 rgba(100,80,50,.08),0 4px 16px rgba(100,80,50,.10);
+  --sh3:0 1px 0 rgba(100,80,50,.10),0 8px 32px rgba(100,80,50,.15);
+
+  /* Layout */
+  --r:18px; --rs:12px; --nav-h:68px; --top-h:56px;
+  --sidebar-w:220px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{font-size:15px;-webkit-text-size-adjust:100%;}
@@ -398,9 +410,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .sec-sub{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);}
 
 .stat-strip{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:18px;}
-.sc2{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:13px 15px;box-shadow:var(--sh);}
+.sc2{background:var(--surf);border:0.5px solid var(--brd);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh2);}
 .sc2-lbl{font-size:11px;color:var(--ink3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
-.sc2-val{font-family:'Lora',serif;font-size:24px;font-weight:500;line-height:1;}
+.sc2-val{font-size:28px;font-weight:900;line-height:1;letter-spacing:-.5px;}
 .sc2-val.green{color:var(--padel);}
 .sc2-val.blue{color:var(--fuerza);}
 .sc2-val.coral{color:var(--coral);}
@@ -423,12 +435,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .week-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:0 16px 8px;scrollbar-width:none;}
 .week-scroll::-webkit-scrollbar{display:none;}
 .week-grid{display:flex;gap:8px;width:max-content;}
-.day-card{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:12px 11px 36px;cursor:pointer;position:relative;width:110px;min-height:148px;flex-shrink:0;transition:border-color .18s,transform .12s;box-shadow:var(--sh);-webkit-tap-highlight-color:transparent;}
+.day-card{background:var(--surf);border:0.5px solid var(--brd);border-radius:var(--r);padding:12px 11px 36px;cursor:pointer;position:relative;width:110px;min-height:148px;flex-shrink:0;transition:border-color .18s,transform .12s,box-shadow .15s;box-shadow:var(--sh2);-webkit-tap-highlight-color:transparent;}
 .day-card:active{transform:scale(.97);}
 .day-card.sel{border-color:var(--coral);box-shadow:0 0 0 2px rgba(212,96,58,.18),var(--sh2);}
 .day-card.today-c{background:linear-gradient(150deg,#fdf8f2 0%,#faf2e8 100%);border-color:rgba(212,96,58,.3);}
 .dc-name{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink4);margin-bottom:3px;}
-.dc-num{font-family:'Lora',serif;font-size:28px;font-weight:400;line-height:1;margin-bottom:8px;}
+.dc-num{font-size:30px;font-weight:800;color:var(--ink);line-height:1;margin-bottom:8px;letter-spacing:-.5px;}
 .dc-num.tn{color:var(--coral);}
 .atag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;display:block;margin-bottom:3px;width:fit-content;}
 .at-padel{background:var(--padel-bg);color:var(--padel);border:1px solid var(--padel-br);}
@@ -441,16 +453,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .dc-prog{position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--surf3);border-radius:0 0 var(--r) var(--r);overflow:hidden;}
 .dc-prog-fill{height:3px;background:var(--fuerza);transition:width .4s ease;}
 
-.detail-panel{display:none;background:var(--surf);border:1px solid var(--brd2);border-radius:var(--r);padding:18px 16px;margin-top:14px;box-shadow:var(--sh2);animation:riseUp .2s ease;}
+.detail-panel{display:none;background:var(--surf);border:0.5px solid var(--brd);border-radius:var(--r);padding:20px 18px;margin-top:14px;box-shadow:var(--sh3);animation:riseUp .2s ease;}
 .detail-panel.show{display:block;}
 .dp-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:10px;}
-.dp-title{font-family:'Lora',serif;font-size:19px;font-weight:500;margin-bottom:2px;}
+.dp-title{font-size:20px;font-weight:800;color:var(--ink);letter-spacing:-.3px;margin-bottom:2px;}
 .dp-date{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);}
 .dp-x{width:32px;height:32px;border-radius:9px;border:1px solid var(--brd2);background:var(--surf2);color:var(--ink2);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .dp-meta{display:flex;gap:8px;margin-bottom:14px;}
 .dp-b-sm{flex:1;background:var(--surf2);border-radius:var(--rs);padding:11px 13px;border:1px solid var(--brd);}
 .dp-bl{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:5px;}
-.dp-bv{font-family:'Lora',serif;font-size:19px;font-weight:500;}
+.dp-bv{font-size:20px;font-weight:800;color:var(--ink);letter-spacing:-.3px;}
 .dp-note-b{background:var(--surf2);border-radius:var(--rs);padding:12px 14px;border:1px solid var(--brd);font-size:12px;color:var(--ink2);line-height:1.65;margin-bottom:12px;}
 .cardio-block{background:var(--cardio-bg);border:1px solid var(--cardio-br);border-radius:var(--rs);padding:13px 14px;margin-bottom:12px;}
 .cardio-block-title{font-size:13px;font-weight:600;color:var(--cardio);margin-bottom:10px;display:flex;align-items:center;gap:7px;}
@@ -471,23 +483,23 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .ex-chk.on{background:var(--fuerza);border-color:var(--fuerza);}
 .ex-chk.on::after{content:'✓';font-size:11px;color:#fff;font-weight:700;}
 .ex-info{flex:1;min-width:0;}
-.ex-n{font-size:13px;font-weight:500;color:var(--ink);}
+.ex-n{font-size:13px;font-weight:600;color:var(--ink);}
 .ex-n.done{color:var(--ink4);text-decoration:line-through;}
 .ex-s{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);margin-top:1px;}
 .ex-right{display:flex;align-items:center;gap:5px;flex-shrink:0;}
-.ex-w-inp{width:58px;text-align:center;background:var(--surf);border:1px solid var(--brd2);border-radius:7px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;color:var(--ink);padding:6px 5px;outline:none;transition:border-color .15s;}
+.ex-w-inp{width:62px;text-align:center;background:var(--fuerza-bg);border:1px solid var(--fuerza-br);border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;color:var(--fuerza);padding:6px 5px;outline:none;transition:all .15s;}
 .ex-w-inp:focus{border-color:var(--fuerza);}
 .ex-w-unit{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);}
 .ex-hist{font-family:'DM Mono',monospace;font-size:10px;background:var(--surf);border:1px solid var(--brd);color:var(--ink3);padding:4px 7px;border-radius:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .ex-pr{font-family:'DM Mono',monospace;font-size:9px;color:var(--coral);background:var(--coral-l);border:1px solid var(--coral-br);border-radius:20px;padding:2px 6px;}
 
 /* DIET */
-.meal-card{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;margin-bottom:12px;box-shadow:var(--sh);}
+.meal-card{background:var(--surf);border:0.5px solid var(--brd);border-radius:var(--r);overflow:hidden;margin-bottom:12px;box-shadow:var(--sh2);}
 .meal-hd{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;cursor:pointer;border-bottom:1px solid var(--brd);-webkit-tap-highlight-color:transparent;}
 .meal-hd:active{background:var(--surf2);}
 .mhd-l{display:flex;align-items:center;gap:11px;}
 .mhd-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
-.mhd-name{font-size:14px;font-weight:600;}
+.mhd-name{font-size:14px;font-weight:700;color:var(--ink);letter-spacing:-.1px;}
 .mhd-time{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);}
 .kcal-chip{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;padding:3px 9px;border-radius:20px;}
 .mprog{height:3px;}
@@ -1469,79 +1481,128 @@ body {
   </div>
 
   <div class="page" id="page-results">
-    <div class="sec-h">
-      <div class="sec-title">Resultados</div>
-      <div class="sec-sub">registra tu peso cada semana</div>
+    <!-- Header -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">Tu progreso</div>
+      <div style="font-size:26px;font-weight:900;color:var(--ink);letter-spacing:-.6px;">Resultados</div>
     </div>
-    <div class="results-main-cols">
-      <div class="results-main-col">
-        <div class="rcard">
-          <div class="rcard-title">Registro de peso</div>
-          <div class="wl-form">
-            <div class="wl-wk" id="wl-cur-week">—</div>
-            <input class="wl-inp" type="number" id="wl-inp" placeholder="kg" min="40" max="250" step="0.1" inputmode="decimal"/>
-            <button class="wl-save" onclick="saveWeight()">Guardar</button>
-          </div>
-          <div id="wl-entries"></div>
-        </div>
-        <div class="rcard">
-          <div class="ch-hd">
-            <div class="rcard-title" style="margin-bottom:0">Evolución del peso</div>
-            <div class="ch-legend">
-              <div class="ch-li"><div class="ch-dot" style="background:var(--moss)"></div>Real</div>
-              <div class="ch-li"><div class="ch-dot" style="background:var(--coral);opacity:.6"></div>Proyección</div>
-            </div>
-          </div>
-          <div class="chart-wrap"><canvas id="wchart"></canvas></div>
-        </div>
-        <div class="rcard" id="adaptive-panel">
-          <div class="rcard-title">Análisis inteligente del plan</div>
-          <div style="font-size:12px;color:var(--ink3);font-style:italic">Cargando análisis...</div>
-        </div>
-        <div class="rcard">
-          <div class="rcard-title">Hitos</div>
-          <div class="ms-list" id="ms-list"></div>
+
+    <!-- Big weight stat -->
+    <div style="background:var(--surf);border:0.5px solid var(--brd);border-radius:20px;padding:18px 20px;margin-bottom:10px;box-shadow:var(--sh2);">
+      <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Peso corporal</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:6px;">
+        <div id="res-weight-big" style="font-size:44px;font-weight:900;color:var(--ink);letter-spacing:-2px;line-height:1;">—</div>
+        <div style="font-size:16px;font-weight:500;color:var(--ink3);">kg</div>
+        <div id="res-weight-delta" style="margin-left:4px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--moss-l);color:var(--moss);"></div>
+      </div>
+      <div class="wl-form" style="margin-bottom:12px;">
+        <div class="wl-wk" id="wl-cur-week">—</div>
+        <input class="wl-inp" type="number" id="wl-inp" placeholder="kg" min="40" max="250" step="0.1" inputmode="decimal"/>
+        <button class="wl-save" onclick="saveWeight()">Guardar</button>
+      </div>
+      <div class="ch-hd">
+        <div style="font-size:12px;font-weight:700;color:var(--ink3);">Evolución</div>
+        <div class="ch-legend">
+          <div class="ch-li"><div class="ch-dot" style="background:var(--moss)"></div>Real</div>
+          <div class="ch-li"><div class="ch-dot" style="background:var(--coral);opacity:.6"></div>Proyección</div>
         </div>
       </div>
-      <div class="results-side-col">
-        <div class="rcard">
-          <div class="rcard-title">Proyección</div>
-          <div class="proj-metric"><div class="pm-lbl">Déficit / semana</div><div class="pm-val b" id="pr-def">—</div><div class="pm-note" id="pr-def-n">—</div></div>
-          <div class="proj-metric"><div class="pm-lbl">Pérdida estimada</div><div class="pm-val g" id="pr-loss">—</div><div class="pm-note" id="pr-loss-n">—</div></div>
-          <div class="proj-metric"><div class="pm-lbl">Peso proyectado (objetivo)</div><div class="pm-val a" id="pr-wt">—</div><div class="pm-note" id="pr-wt-n">—</div></div>
-          <div class="pace-bg"><div class="pace-fill" id="pace-fill" style="width:0%"></div></div>
-          <div class="pace-lbl" id="pace-lbl">—</div>
-          <div class="alert-box" id="alert-box"></div>
-        </div>
+      <div class="chart-wrap"><canvas id="wchart"></canvas></div>
+    </div>
+
+    <!-- Goal progress bar -->
+    <div style="background:var(--surf);border:0.5px solid var(--brd);border-radius:18px;padding:16px 18px;margin-bottom:10px;box-shadow:var(--sh);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;">Objetivo de peso</div>
+        <div id="res-goal-label" style="font-size:11px;color:var(--ink3);">— → —</div>
       </div>
+      <div style="height:8px;background:var(--surf3);border-radius:4px;overflow:hidden;margin-bottom:8px;">
+        <div id="res-goal-bar" style="height:8px;background:linear-gradient(90deg,var(--coral),var(--amber));border-radius:4px;width:0%;transition:width .8s ease;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div id="res-goal-start" style="font-size:10px;color:var(--ink3);">—</div>
+        <div id="res-goal-pct" style="font-size:11px;font-weight:700;color:var(--amber);">—</div>
+        <div id="res-goal-end" style="font-size:10px;color:var(--ink3);">meta —</div>
+      </div>
+    </div>
+
+    <!-- Stats 2x2 grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;" id="res-stats-grid">
+    </div>
+
+    <!-- Proyección -->
+    <div style="background:var(--surf);border:0.5px solid var(--brd);border-radius:18px;padding:16px 18px;margin-bottom:10px;box-shadow:var(--sh);">
+      <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Proyección</div>
+      <div class="proj-metric"><div class="pm-lbl">Déficit / semana</div><div class="pm-val b" id="pr-def">—</div><div class="pm-note" id="pr-def-n">—</div></div>
+      <div class="proj-metric"><div class="pm-lbl">Pérdida estimada</div><div class="pm-val g" id="pr-loss">—</div><div class="pm-note" id="pr-loss-n">—</div></div>
+      <div class="proj-metric"><div class="pm-lbl">Peso proyectado</div><div class="pm-val a" id="pr-wt">—</div><div class="pm-note" id="pr-wt-n">—</div></div>
+      <div class="pace-bg"><div class="pace-fill" id="pace-fill" style="width:0%"></div></div>
+      <div class="pace-lbl" id="pace-lbl">—</div>
+      <div class="alert-box" id="alert-box"></div>
+    </div>
+
+    <!-- Adaptive panel -->
+    <div style="background:var(--surf);border:0.5px solid var(--brd);border-radius:18px;padding:16px 18px;margin-bottom:10px;box-shadow:var(--sh);" id="adaptive-panel">
+      <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Análisis inteligente</div>
+      <div style="font-size:12px;color:var(--ink3);font-style:italic">Cargando análisis...</div>
+    </div>
+
+    <!-- Milestones -->
+    <div style="background:var(--surf);border:0.5px solid var(--brd);border-radius:18px;padding:16px 18px;margin-bottom:10px;box-shadow:var(--sh);">
+      <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Hitos</div>
+      <div class="ms-list" id="ms-list"></div>
+    </div>
+
+    <!-- PRs section -->
+    <div style="background:var(--surf);border:0.5px solid var(--brd);border-radius:18px;padding:16px 18px;margin-bottom:10px;box-shadow:var(--sh2);" id="res-prs-section">
+      <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">🏆 Records personales</div>
+      <div id="res-prs-list"><div style="font-size:12px;color:var(--ink4);">Sin registros aún. Los PRs aparecen cuando superas tu mejor marca.</div></div>
+    </div>
+
+    <!-- Weight log -->
+    <div style="background:var(--surf);border:0.5px solid var(--brd);border-radius:18px;padding:16px 18px;box-shadow:var(--sh);">
+      <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Historial de peso</div>
+      <div id="wl-entries"></div>
     </div>
   </div>
 
   <!-- INICIO PAGE -->
   <div class="page" id="page-inicio">
-    <div class="sec-h" style="margin-bottom:16px">
-      <div id="home-greeting-sub" style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;font-family:'DM Mono',monospace;"></div>
-      <div class="sec-title" id="home-greeting-name">Buenos días</div>
+    <div style="margin-bottom:14px;">
+      <div id="home-greeting-sub" style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;"></div>
+      <div style="font-size:26px;font-weight:900;color:var(--ink);letter-spacing:-.6px;line-height:1.1;" id="home-greeting-name">Buenos días</div>
     </div>
-    <div id="home-score-card" style="background:var(--surf);border:1px solid var(--brd);border-radius:20px;padding:18px;margin-bottom:12px;display:flex;align-items:center;gap:18px;">
-      <div style="flex-shrink:0">
-        <svg width="80" height="80" viewBox="0 0 80 80">
-          <circle cx="40" cy="40" r="32" fill="none" stroke="#e8e2d6" stroke-width="7"/>
-          <circle cx="40" cy="40" r="32" fill="none" stroke="#d4603a" stroke-width="7"
-            id="home-ring-arc" stroke-dasharray="201.06" stroke-dashoffset="201.06" stroke-linecap="round"
-            transform="rotate(-90 40 40)" style="transition:stroke-dashoffset .8s ease"/>
-          <text x="40" y="37" text-anchor="middle" font-size="16" font-weight="800" fill="#2c2418" font-family="Sora,Plus Jakarta Sans,sans-serif" id="home-ring-num">0</text>
-          <text x="40" y="50" text-anchor="middle" font-size="10" fill="#a89880" font-family="DM Mono,monospace">/ 100</text>
+
+    <!-- Score card — protagonist -->
+    <div id="home-score-card" style="background:var(--surf);border:0.5px solid var(--brd);border-radius:20px;padding:18px 20px;margin-bottom:10px;display:flex;align-items:center;gap:16px;box-shadow:var(--sh2);">
+      <div style="flex-shrink:0;position:relative;">
+        <svg width="86" height="86" viewBox="0 0 86 86">
+          <circle cx="43" cy="43" r="35" fill="none" stroke="rgba(100,80,50,.1)" stroke-width="7"/>
+          <circle cx="43" cy="43" r="35" fill="none" stroke="var(--coral)" stroke-width="7"
+            id="home-ring-arc" stroke-dasharray="219.9" stroke-dashoffset="219.9" stroke-linecap="round"
+            transform="rotate(-90 43 43)" style="transition:stroke-dashoffset .9s ease"/>
+          <text x="43" y="40" text-anchor="middle" font-size="18" font-weight="900" fill="var(--ink)" font-family="Plus Jakarta Sans,sans-serif" id="home-ring-num">0</text>
+          <text x="43" y="55" text-anchor="middle" font-size="9" fill="var(--ink3)" font-family="Plus Jakarta Sans,sans-serif">/ 100</text>
         </svg>
       </div>
-      <div>
-        <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;font-family:'DM Mono',monospace;margin-bottom:4px">Score del día</div>
-        <div style="font-size:28px;font-weight:800;color:var(--ink);letter-spacing:-1px;line-height:1" id="home-score-big">0<span style="font-size:14px;color:var(--ink3);font-weight:600"> / 100</span></div>
-        <div style="font-size:12px;color:var(--ink2);margin-top:6px;line-height:1.45" id="home-score-msg">Cargando tu progreso...</div>
+      <div style="flex:1;">
+        <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">Score del día</div>
+        <div style="font-size:30px;font-weight:900;color:var(--ink);letter-spacing:-1px;line-height:1;" id="home-score-big">0<span style="font-size:15px;color:var(--ink3);font-weight:500;"> / 100</span></div>
+        <div style="font-size:12px;color:var(--ink2);margin-top:6px;line-height:1.5;" id="home-score-msg">Cargando tu progreso...</div>
+        <div id="home-score-tags" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;"></div>
       </div>
     </div>
-    <div id="home-prog-grid" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
-    <div id="home-mini-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;"></div>
+
+    <!-- Mini stats -->
+    <div id="home-mini-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;"></div>
+
+    <!-- Progress cards -->
+    <div style="background:var(--surf);border:0.5px solid var(--brd);border-radius:20px;padding:16px;margin-bottom:10px;box-shadow:var(--sh);">
+      <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Progreso del día</div>
+      <div id="home-prog-grid"></div>
+    </div>
+
+    <!-- Next session -->
     <div id="home-next-card"></div>
   </div>
 
@@ -2112,6 +2173,83 @@ const FD={
     {n:'Remo en polea baja',s:'3×12–15'},{n:'Press inclinado',s:'3×12–15'},
     {n:'Face pull',s:'3×15'},{n:'Plancha',s:'3×30–45 seg'}]},
 };
+
+/* ── Bloques B: mismos grupos musculares, ejercicios alternativos ── */
+const FD_B={
+  'Tren superior':{kcal:'~450 kcal',dur:'60–75 min',variant:'B',ex:[
+    {n:'Press de mancuernas inclinado',s:'4×10–12'},
+    {n:'Dominadas (pull-ups)',s:'4×8–10'},
+    {n:'Press Arnold',s:'4×10–12'},
+    {n:'Jalones con agarre neutro',s:'4×10–12'},
+    {n:'Curl martillo',s:'3×12'},
+    {n:'Press francés (skull crusher)',s:'3×12'}]},
+  'Tren inferior':{kcal:'~540 kcal',dur:'60–75 min',variant:'B',ex:[
+    {n:'Sentadilla búlgara (split squat)',s:'4×10 c/lado'},
+    {n:'Peso muerto convencional',s:'4×8–10'},
+    {n:'Hack squat en máquina',s:'4×12'},
+    {n:'Curl femoral tumbado',s:'3×12'},
+    {n:'Zancadas (lunges)',s:'3×12 c/lado'},
+    {n:'Gemelos sentado (máquina)',s:'4×15'}]},
+  'Full body':{kcal:'~460 kcal',dur:'50–60 min',variant:'B',ex:[
+    {n:'Sentadilla frontal',s:'3×12–15'},
+    {n:'Hip thrust con mancuerna',s:'3×12–15'},
+    {n:'Remo Pendlay',s:'3×12–15'},
+    {n:'Press de mancuernas plano',s:'3×12–15'},
+    {n:'Reverse fly con mancuernas',s:'3×15'},
+    {n:'Plancha lateral',s:'3×30 seg c/lado'}]},
+};
+
+/* ── Counter: tracks how many times each sub has been done ──
+   Key: sub name (e.g. 'Tren superior'), value: cumulative count
+   Odd count = B block, even count = A block (1→A, 2→B, 3→A, 4→B...) */
+let fdCounter={};
+try{fdCounter=JSON.parse(localStorage.getItem('fp_fdc')||'{}');}catch(e){}
+
+function persistFDCounter(){
+  localStorage.setItem('fp_fdc',JSON.stringify(fdCounter));
+}
+
+/* Returns the correct FD block for a given sub and dateKey.
+   Reads historical usage to decide A or B. */
+function getFDForDate(sub, dateKey){
+  // Count how many distinct days with this sub exist up to and including dateKey
+  // We store per-day which variant was used in fdVariants
+  if(!window.fdVariants) window.fdVariants={};
+  try{
+    const stored=localStorage.getItem('fp_fdv');
+    if(stored) window.fdVariants=JSON.parse(stored);
+  }catch(e){}
+
+  // If this day already has a variant assigned, return it
+  const dk=dateKey;
+  if(window.fdVariants[sub]&&window.fdVariants[sub][dk]!==undefined){
+    const v=window.fdVariants[sub][dk];
+    return v==='B'?(FD_B[sub]||FD[sub]):FD[sub];
+  }
+
+  // Count how many days before today have been assigned for this sub
+  const subVariants=window.fdVariants[sub]||{};
+  const pastDates=Object.keys(subVariants).filter(d=>d<=dk).sort();
+  // The variant for today = opposite of the last assigned day
+  let lastVariant='A';
+  if(pastDates.length>0){
+    lastVariant=subVariants[pastDates[pastDates.length-1]];
+  }
+  const todayVariant=lastVariant==='A'?'B':'A';
+
+  // Assign and persist
+  if(!window.fdVariants[sub]) window.fdVariants[sub]={};
+  window.fdVariants[sub][dk]=todayVariant;
+  localStorage.setItem('fp_fdv',JSON.stringify(window.fdVariants));
+
+  return todayVariant==='B'?(FD_B[sub]||FD[sub]):FD[sub];
+}
+
+/* Helper: get variant label for a given sub+date */
+function getFDVariantLabel(sub, dateKey){
+  if(!window.fdVariants||!window.fdVariants[sub]) return 'A';
+  return window.fdVariants[sub][dateKey]||'A';
+}
 const CARDIO_OPTS=[
   {id:'c_cinta',name:'Cinta (marcha rápida / carrera)',dur:'30 min'},
   {id:'c_bici',name:'Bicicleta estática o elíptica',dur:'30 min'},
@@ -2555,7 +2693,7 @@ function renderNextWeightRecs(){
 // También muestra un mini-insight en el detalle del día de fuerza
 function getDetailInsights(sub,dateKey){
   const {phase,vol}=generateWeeklyInsights();
-  const fd=FD[sub]||FD['Tren superior'];
+  const fd=getFDForDate(sub,dateKey)||FD['Tren superior'];
   const recs=fd.ex.map(x=>{
     const eid=exId(sub,x.n);
     const rec=getNextWeightRec(eid);
@@ -2640,7 +2778,7 @@ function renderHome(){
   if(todayIdx>=0){
     const e = entry(tk,todayIdx);
     if(e.type==='fuerza'&&e.sub){
-      const fd=FD[e.sub]||FD['Tren superior'];
+      const fd=getFDForDate(fuAct?fuAct.sub:e.sub,key)||FD['Tren superior'];
       trainTotal=fd.ex.length;
       trainDone=fd.ex.filter(x=>(exChecks[tk]||{})[exId(e.sub,x.n)]).length;
       trainPct=Math.round(trainDone/trainTotal*100);
@@ -2662,7 +2800,7 @@ function renderHome(){
   const score = Math.round(nutPct*0.35 + protPct*0.25 + trainPct*0.25 + suplPct*0.15);
 
   // Update ring
-  const circ = 201.06;
+  const circ = 219.9;
   const offset = circ - (circ * score/100);
   const arc = document.getElementById('home-ring-arc');
   if(arc){ arc.setAttribute('stroke-dashoffset', offset.toFixed(2)); }
@@ -2687,6 +2825,19 @@ function renderHome(){
   const msgEl=document.getElementById('home-score-msg');
   if(msgEl) msgEl.innerHTML=msg;
 
+  // Score tags
+  const tagsEl=document.getElementById('home-score-tags');
+  if(tagsEl){
+    const tags=[];
+    if(nutPct>=80) tags.push({l:'Nutrición ✓',c:'#e6f4ea',t:'#1e7e34'});
+    else tags.push({l:'Nutrición',c:'#fff3e0',t:'#e65100'});
+    if(trainPct>=100) tags.push({l:'Entreno ✓',c:'#e3edf9',t:'#1e4f8f'});
+    else if(trainPct>0) tags.push({l:'Entreno '+trainPct+'%',c:'#e3edf9',t:'#1e4f8f'});
+    else tags.push({l:'Entreno',c:'#f0ece3',t:'#9a8870'});
+    if(suplPct>=100) tags.push({l:'Suplem. ✓',c:'#e6f2ea',t:'#2e6b3e'});
+    tagsEl.innerHTML=tags.map(tag=>`<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:${tag.c};color:${tag.t};">${tag.l}</span>`).join('');
+  }
+
   // Progress bars
   const progs=[
     {ico:'🥗',label:'Nutrición',    sub:`${kcalDone} / ${kcalTarget} kcal`,  pct:nutPct,   col:'var(--fuerza)', dest:'diet'},
@@ -2697,25 +2848,21 @@ function renderHome(){
   const grid=document.getElementById('home-prog-grid');
   if(grid) grid.innerHTML=progs.map(p=>`
     <div onclick="goPage('${p.dest}',document.getElementById('bn-${p.dest}'))"
-      style="background:var(--surf);border:1px solid var(--brd);border-radius:14px;padding:13px 15px;
-      cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;position:relative;"
-      onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='rgba(100,80,50,.22)'"
-      onmouseout="this.style.transform='';this.style.borderColor=''">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <div style="display:flex;align-items:center;gap:9px;">
-          <div style="width:28px;height:28px;border-radius:8px;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:14px;">${p.ico}</div>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:var(--ink);letter-spacing:-.1px">${p.label}</div>
-            <div style="font-size:11px;color:var(--ink3);font-weight:500;margin-top:1px">${p.sub}</div>
-          </div>
+      style="padding:11px 0;border-bottom:0.5px solid var(--brd);cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent;"
+      onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
+        <div style="width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:var(--surf2);">${p.ico}</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:700;color:var(--ink);">${p.label}</div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:1px;">${p.sub}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="font-size:13px;font-weight:700;color:${p.col}">${p.pct}%</div>
-          <div style="width:20px;height:20px;border-radius:20px;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--ink3);flex-shrink:0;">→</div>
+        <div style="display:flex;align-items:center;gap:7px;">
+          <div style="font-size:14px;font-weight:900;color:${p.col};letter-spacing:-.3px;">${p.pct}%</div>
+          <div style="font-size:12px;color:var(--ink4);">›</div>
         </div>
       </div>
-      <div style="height:6px;background:var(--surf3);border-radius:3px;overflow:hidden;">
-        <div style="height:6px;background:${p.col};width:${p.pct}%;border-radius:3px;transition:width .6s ease;"></div>
+      <div style="height:4px;background:var(--surf3);border-radius:2px;overflow:hidden;">
+        <div style="height:4px;background:${p.col};width:${p.pct}%;border-radius:2px;transition:width .7s ease;"></div>
       </div>
     </div>
   `).join('');
@@ -2728,10 +2875,10 @@ function renderHome(){
     {ico:'💧',val:wlog.length?wlog[wlog.length-1].kg+'kg':'—',lbl:'últ. peso',col:'var(--fuerza)'},
     {ico:'🏆',val:Object.keys(exWeights).length,lbl:'ejercicios log.',col:'var(--amber)'},
   ].map(m=>`
-    <div style="background:var(--surf);border:1px solid var(--brd);border-radius:14px;padding:12px 10px;text-align:center;">
-      <div style="font-size:18px;margin-bottom:4px;">${m.ico}</div>
-      <div style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:${m.col}">${m.val}</div>
-      <div style="font-size:10px;color:var(--ink3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:2px">${m.lbl}</div>
+    <div style="background:var(--surf);border:0.5px solid var(--brd);border-radius:14px;padding:12px 10px;text-align:center;box-shadow:var(--sh);">
+      <div style="font-size:18px;margin-bottom:5px;">${m.ico}</div>
+      <div style="font-size:22px;font-weight:900;letter-spacing:-.5px;color:${m.col};line-height:1;">${m.val}</div>
+      <div style="font-size:9px;color:var(--ink3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:3px;">${m.lbl}</div>
     </div>
   `).join('');
 
@@ -2759,13 +2906,13 @@ function renderHome(){
       const typeIco={padel:'🎾',fuerza:'🏋️',cardio:'🏃',libre:'⭐'}[nextEntry.type]||'🏋️';
       nextCard.innerHTML=`
         <div onclick="goPage('training',document.getElementById('bn-training'))"
-          style="background:${typeBg};border:1px solid rgba(0,0,0,.06);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;"
+          style="background:linear-gradient(135deg,#1e3a5f,#0d2137);border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 16px rgba(30,58,95,.25);"
           onmouseover="this.style.transform='translateY(-2px)'"
           onmouseout="this.style.transform=''">
           <div style="width:40px;height:40px;border-radius:12px;background:${typeColor};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${typeIco}</div>
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:700;color:${typeColor};letter-spacing:-.1px">${nextEntry.sub||nextEntry.type} — ${nextLabel}</div>
-            <div style="font-size:11px;color:var(--ink3);font-weight:500;margin-top:2px">Toca para abrir la sesión → ${nextEntry.time||''}</div>
+            <div style="font-size:13px;font-weight:700;color:#fff;letter-spacing:-.1px">${nextEntry.sub||nextEntry.type} — ${nextLabel}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.55);font-weight:500;margin-top:2px">Toca para abrir → ${nextEntry.time||''}</div>
           </div>
         </div>`;
     } else {
@@ -3070,7 +3217,7 @@ function renderTraining(){
     const fuAct=acts.find(a=>a.type==='fuerza');
     const cuAct=acts.find(a=>a.type==='custom');
     if(fuAct){
-      const fd=FD[fuAct.sub]||FD['Tren superior'];
+      const fd=getFDForDate(fuAct.sub,key)||FD['Tren superior'];
       const done=fd.ex.filter(x=>(exChecks[key]||{})[exId(fuAct.sub,x.n)]).length;
       prog=`<div class="dc-prog"><div class="dc-prog-fill" style="width:${Math.round(done/fd.ex.length*100)}%"></div></div>`;
     } else if(cuAct){
@@ -3331,7 +3478,7 @@ function buildActivityBlock(act, idx, dk, date){
   let body = '';
 
   if(act.type === 'fuerza'){
-    const fd = FD[act.sub]||FD['Tren superior'];
+    const fd = getFDForDate(act.sub,dk)||FD['Tren superior'];
     const done = fd.ex.filter(x=>(exChecks[dk]||{})[exId(act.sub,x.n)]).length;
     const pct = Math.round(done/fd.ex.length*100);
     body = getDetailInsights(act.sub,dk)
@@ -3362,7 +3509,12 @@ function buildActivityBlock(act, idx, dk, date){
   return '<div style="background:var(--surf);border:1px solid var(--brd);border-radius:16px;margin-bottom:10px;overflow:hidden;">'
     + '<div style="background:'+typeBg+';padding:11px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;" data-bid="'+blockId+'" onclick="toggleActBlock(this.dataset.bid)">'
     + '<span style="font-size:16px;">'+typeIco+'</span>'
-    + '<div style="flex:1;font-size:13px;font-weight:700;color:'+typeCol+';">'+(act.sub||({padel:'Pádel',fuerza:'Fuerza',descanso:'Descanso',custom:'Entreno libre'}[act.type]||act.type))+'</div>'
+    + (()=>{
+      const label = act.sub||({padel:'Pádel',fuerza:'Fuerza',descanso:'Descanso',custom:'Entreno libre'}[act.type]||act.type);
+      const variant = act.type==='fuerza' ? getFDVariantLabel(act.sub||'',dk) : null;
+      const badge = variant ? ' <span style="font-size:10px;background:rgba(255,255,255,.15);color:'+typeCol+';padding:1px 7px;border-radius:20px;font-weight:800;margin-left:4px;">'+variant+'</span>' : '';
+      return '<div style="flex:1;font-size:13px;font-weight:700;color:'+typeCol+';">'+label+badge+'</div>';
+    })()
     + (isPast?'<span style="font-size:9px;background:var(--surf3);color:var(--ink3);padding:1px 7px;border-radius:10px;margin-right:4px;">🔒</span>':'')
     + '<span style="font-size:10px;color:'+typeCol+';opacity:.7;" id="arr-'+blockId+'">▾</span>'
     + '</div>'
@@ -3488,7 +3640,7 @@ function showDetail(key,i,date,e){
     main=`<div class="dp-meta"><div class="dp-b-sm"><div class="dp-bl">Duración</div><div class="dp-bv">90 min</div></div><div class="dp-b-sm"><div class="dp-bl">Gasto</div><div class="dp-bv">~800 kcal</div></div></div>
     <div class="dp-note-b">Hidratación extra: +500–750 ml. Toma la merienda si llevas más de 3 h sin comer.</div>`;
   } else if(type==='fuerza'){
-    const fd=FD[sub]||FD['Tren superior'];
+    const fd=getFDForDate(sub,dk)||FD['Tren superior'];
     const done=fd.ex.filter(x=>(exChecks[dk]||{})[exId(sub,x.n)]).length;
     const pct=Math.round(done/fd.ex.length*100);
     main=`<div class="dp-meta"><div class="dp-b-sm"><div class="dp-bl">Duración</div><div class="dp-bv">${fd.dur}</div></div><div class="dp-b-sm"><div class="dp-bl">Completado</div><div class="dp-bv" style="color:var(--fuerza)">${done}/${fd.ex.length}</div></div></div>
@@ -4461,8 +4613,65 @@ function saveWeight(){
 }
 function renderWlog(){
   document.getElementById('wl-cur-week').textContent=curWkLabel();
+
+  // Update big weight display
+  if(wlog.length){
+    const latest=wlog[wlog.length-1];
+    const bigEl=document.getElementById('res-weight-big');
+    if(bigEl) bigEl.textContent=latest.kg;
+    const deltaEl=document.getElementById('res-weight-delta');
+    if(deltaEl && wlog.length>1){
+      const first=wlog[0].kg;
+      const diff=+(latest.kg-first).toFixed(1);
+      deltaEl.textContent=(diff>0?'↑ +':'↓ ')+Math.abs(diff)+' kg';
+      deltaEl.style.background=diff<=0?'var(--moss-l)':'var(--coral-l)';
+      deltaEl.style.color=diff<=0?'var(--moss)':'var(--coral)';
+    }
+    // Goal progress bar
+    const goalKg=P.weightGoal||110;
+    const startKg=wlog[0].kg;
+    const totalDiff=startKg-goalKg;
+    const doneDiff=startKg-latest.kg;
+    const pct=totalDiff>0?Math.min(Math.round(doneDiff/totalDiff*100),100):0;
+    const goalBar=document.getElementById('res-goal-bar');
+    if(goalBar) goalBar.style.width=pct+'%';
+    const goalLabel=document.getElementById('res-goal-label');
+    if(goalLabel) goalLabel.textContent=startKg+' → '+goalKg+' kg';
+    const goalStart=document.getElementById('res-goal-start');
+    if(goalStart) goalStart.textContent='inicio '+startKg+' kg';
+    const goalPct=document.getElementById('res-goal-pct');
+    if(goalPct) goalPct.textContent=pct+'% completado';
+    const goalEnd=document.getElementById('res-goal-end');
+    if(goalEnd) goalEnd.textContent='meta '+goalKg+' kg';
+  }
+
+  // Stats grid
+  const statsGrid=document.getElementById('res-stats-grid');
+  if(statsGrid){
+    const days7=weekDays(wkOff);
+    let totalTrainSessions=0,totalPadelSessions=0;
+    Object.values(wkData).forEach(v=>{
+      const acts=Array.isArray(v)?v:[v];
+      acts.forEach(a=>{ if(a.type==='fuerza')totalTrainSessions++; if(a.type==='padel')totalPadelSessions++; });
+    });
+    const totalExLogged=Object.keys(exWeights).length;
+    const stats=[
+      {l:'Entrenos',v:totalTrainSessions,u:'sesiones',c:'var(--fuerza)'},
+      {l:'Pádel',v:totalPadelSessions,u:'partidos',c:'var(--padel)'},
+      {l:'Ejercicios log.',v:totalExLogged,u:'con peso',c:'var(--amber)'},
+      {l:'Semanas activas',v:wlog.length,u:'registradas',c:'var(--coral)'},
+    ];
+    statsGrid.innerHTML=stats.map(s=>`
+      <div style="background:var(--surf);border:0.5px solid var(--brd);border-radius:18px;padding:16px 14px;box-shadow:var(--sh2);">
+        <div style="font-size:9px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">${s.l}</div>
+        <div style="font-size:28px;font-weight:900;color:var(--ink);letter-spacing:-.8px;line-height:1;">${s.v}</div>
+        <div style="font-size:11px;color:var(--ink3);font-weight:500;margin-top:4px;border-top:0.5px solid var(--brd);padding-top:6px;margin-top:8px;">${s.u}</div>
+      </div>`).join('');
+  }
+
+  renderPRs();
   const c=document.getElementById('wl-entries');
-  if(!wlog.length){c.innerHTML='<div style="font-family:var(--font-mono,monospace);font-size:12px;color:var(--ink4);padding:6px 0">Sin registros — introduce tu peso cada lunes.</div>';return;}
+  if(!wlog.length){c.innerHTML='<div style="font-size:12px;color:var(--ink4);padding:6px 0">Sin registros — introduce tu peso cada lunes.</div>';return;}
   c.innerHTML=wlog.slice().reverse().map((w,ri)=>{
     const prev=wlog[wlog.length-2-ri];let dH='';
     if(prev){const d=+(w.kg-prev.kg).toFixed(1);const cls=d<=0?'diff-down':'diff-up';dH=`<span class="wle-diff ${cls}">${d>0?'+':''}${d} kg</span>`;}
@@ -4470,6 +4679,38 @@ function renderWlog(){
   }).join('');
 }
 function delW(wk){wlog=wlog.filter(w=>w.week!==wk);persist();renderWlog();renderChart();renderMS();updateProj();}
+
+function renderPRs(){
+  const list=document.getElementById('res-prs-list');
+  if(!list) return;
+  // Collect PRs: for each exercise, find the max weight ever recorded
+  const prs=[];
+  for(const [eid,entries] of Object.entries(exWeights)){
+    if(!entries||!entries.length) continue;
+    const maxEntry=entries.reduce((a,b)=>parseFloat(a.kg)>=parseFloat(b.kg)?a:b);
+    if(parseFloat(maxEntry.kg)>0){
+      // Humanize eid: remove prefix and underscores
+      const name=eid.replace(/^[A-Za-z_]+__/,'').replace(/_/g,' ').replace(/[A-Z]/g,' $&').trim();
+      prs.push({name:eid.split('_').slice(1).join(' ').trim()||eid, kg:parseFloat(maxEntry.kg), date:maxEntry.date});
+    }
+  }
+  // Sort by date descending (most recent PRs first)
+  prs.sort((a,b)=>b.date.localeCompare(a.date));
+  const medals=['🥇','🥈','🥉'];
+  if(!prs.length){
+    list.innerHTML='<div style="font-size:12px;color:var(--ink4);">Sin registros aún. Los PRs aparecen cuando registras pesos.</div>';
+    return;
+  }
+  list.innerHTML=prs.slice(0,6).map((pr,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--brd);">
+      <div style="width:32px;height:32px;border-radius:9px;background:var(--amber-l);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">${medals[i]||'🔸'}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${pr.name}</div>
+        <div style="font-size:10px;color:var(--ink3);margin-top:1px;">${pr.date}</div>
+      </div>
+      <div style="font-size:16px;font-weight:900;color:var(--coral);letter-spacing:-.3px;">${pr.kg} kg</div>
+    </div>`).join('').replace(/<div[^>]*border-bottom[^>]*>(?!.*<div[^>]*border-bottom)/s, m => m.replace('border-bottom:0.5px solid var(--brd);',''));
+}
 function renderChart(){
   const ctx=document.getElementById('wchart').getContext('2d');
   if(chartI){chartI.destroy();chartI=null;}
