@@ -1684,11 +1684,11 @@ body {
     </div>
 
     <!-- Configurador de rutinas A/B -->
-    <div id="ej-pane-rutinas" style="display:none;">
+    <div id="ej-pane-rutinas" style="display:none;-webkit-overflow-scrolling:touch;">
       <div style="font-size:11px;color:var(--ink3);margin-bottom:12px;background:var(--fuerza-bg);border-radius:10px;padding:9px 11px;border:1px solid var(--fuerza-br);">
         Personaliza los ejercicios de cada bloque. El sistema alterna A→B→A→B automáticamente.
       </div>
-      <div id="rutinas-body"></div>
+      <div id="rutinas-body" style="touch-action:pan-y;"></div>
     </div>
   </div>
 
@@ -4970,7 +4970,7 @@ function renderRutinas(){
   if(!body)return;
   const subs=['Tren superior','Tren inferior','Full body'];
   body.innerHTML=subs.map(sub=>{
-    return `<div style="margin-bottom:20px;">
+    return `<div style="margin-bottom:20px;touch-action:pan-y;">
       <div style="font-size:13px;font-weight:800;color:var(--ink);letter-spacing:-.2px;margin-bottom:10px;
         border-left:3px solid var(--coral);padding-left:10px;">${sub}</div>
       ${['A','B'].map(v=>{
@@ -4980,7 +4980,7 @@ function renderRutinas(){
         const varCol=v==='A'?'var(--fuerza)':'var(--moss)';
         const varBg=v==='A'?'var(--fuerza-bg)':'var(--moss-l)';
         return `<div style="background:var(--surf);border:0.5px solid var(--brd);border-radius:16px;
-          margin-bottom:8px;overflow:hidden;box-shadow:var(--sh);">
+          margin-bottom:8px;overflow:hidden;box-shadow:var(--sh);touch-action:pan-y;">
           <div style="background:${varBg};padding:9px 13px;display:flex;align-items:center;gap:7px;
             border-bottom:0.5px solid var(--brd);">
             <span style="font-size:12px;font-weight:800;color:${varCol};background:${varBg};
@@ -4992,7 +4992,7 @@ function renderRutinas(){
               border:1px solid rgba(100,80,50,.15);background:var(--surf2);color:var(--ink3);
               cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">↺ Restablecer</button>
           </div>
-          <div id="rutina-list-${key.replace(/ /g,'_')}" style="padding:4px 0;">
+          <div id="rutina-list-${key.replace(/ /g,'_')}" style="padding:4px 0;touch-action:pan-y;">
             ${exercises.map((ex,idx)=>`
               <div style="display:flex;align-items:center;gap:8px;padding:8px 13px;
                 border-bottom:0.5px solid var(--brd);" data-key="${key}" data-idx="${idx}">
