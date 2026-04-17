@@ -1663,9 +1663,33 @@ body {
   <div class="page" id="page-ejercicios">
     <div class="sec-h">
       <div class="sec-title">Ejercicios</div>
-      <div class="sec-sub">toca cualquier ejercicio para ver variantes del mismo músculo</div>
     </div>
-    <div id="ejercicios-body"></div>
+
+    <!-- Tabs: Biblioteca / Configurar rutinas -->
+    <div style="display:flex;background:var(--surf2);border-radius:11px;padding:3px;gap:2px;margin-bottom:14px;">
+      <button id="ej-tab-biblioteca" onclick="ejTab('biblioteca')"
+        style="flex:1;padding:7px;border-radius:9px;border:none;background:var(--surf);color:var(--ink);font-size:12px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;box-shadow:var(--sh);">
+        📚 Biblioteca
+      </button>
+      <button id="ej-tab-rutinas" onclick="ejTab('rutinas')"
+        style="flex:1;padding:7px;border-radius:9px;border:none;background:transparent;color:var(--ink3);font-size:12px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;">
+        ⚙️ Mis rutinas
+      </button>
+    </div>
+
+    <!-- Biblioteca -->
+    <div id="ej-pane-biblioteca">
+      <div style="font-size:11px;color:var(--ink3);margin-bottom:10px;">Toca cualquier ejercicio para ver variantes del mismo músculo</div>
+      <div id="ejercicios-body"></div>
+    </div>
+
+    <!-- Configurador de rutinas A/B -->
+    <div id="ej-pane-rutinas" style="display:none;">
+      <div style="font-size:11px;color:var(--ink3);margin-bottom:12px;background:var(--fuerza-bg);border-radius:10px;padding:9px 11px;border:1px solid var(--fuerza-br);">
+        Personaliza los ejercicios de cada bloque. El sistema alterna A→B→A→B automáticamente.
+      </div>
+      <div id="rutinas-body"></div>
+    </div>
   </div>
 
   <!-- ADMIN PAGE -->
@@ -2242,7 +2266,12 @@ function getFDForDate(sub, dateKey){
   window.fdVariants[sub][dk]=todayVariant;
   localStorage.setItem('fp_fdv',JSON.stringify(window.fdVariants));
 
-  return todayVariant==='B'?(FD_B[sub]||FD[sub]):FD[sub];
+  const base=todayVariant==='B'?(FD_B[sub]||FD[sub]):FD[sub];
+  const key=sub+'_'+todayVariant;
+  if(customFD&&customFD[key]){
+    return {...base,ex:customFD[key]};
+  }
+  return base;
 }
 
 /* Helper: get variant label for a given sub+date */
@@ -3260,19 +3289,20 @@ function buildExRow(x, sub, dateKey){
   const isSwapped = activeName !== x.n;
   const altPanelId = 'alt_' + exId(sub, x.n);
 
-  // Build alt panel HTML if EX_DB has this exercise
-  const exData = EX_DB[x.n];
-  const altBtn = exData
-    ? `<button class="ex-hist" onclick="event.stopPropagation();toggleAltPanel('${altPanelId}','${x.n}','${sub}','${dateKey}')" title="Cambiar ejercicio">⇄</button>`
-    : '';
+  // Build alt panel — use EX_DB[x.n] (A block) or EX_DB[activeName] (B block)
+  // or fall back to a universal panel with ALL EX_DB exercises as options
+  const exData = EX_DB[x.n] || EX_DB[activeName];
+  const altBtn = `<button class="ex-hist" onclick="event.stopPropagation();toggleAltPanel('${altPanelId}','${x.n}','${sub}','${dateKey}')" title="Cambiar ejercicio">⇄</button>`;
 
-  const altPanel = exData ? `<div id="${altPanelId}" style="display:none;background:var(--surf2);border-radius:10px;margin:4px 0 6px;padding:8px;border:1px solid var(--brd2);">
+  // Build alternatives list: prefer EX_DB[x.n].alts, else all EX_DB keys
+  const altSource = exData ? exData.alts : Object.keys(EX_DB).map(n=>({n,d:EX_DB[n].muscle||''}));
+  const altPanel = `<div id="${altPanelId}" style="display:none;background:var(--surf2);border-radius:10px;margin:4px 0 6px;padding:8px;border:1px solid var(--brd2);">
     <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;">Alternativas · ${x.n}</div>
     ${(()=>{
       // Store alts in a registry so onclick can use index safely
       const regKey = 'alts_' + altPanelId;
       window._altReg = window._altReg || {};
-      window._altReg[regKey] = {alts: exData.alts, swapKey, sub, dateKey, panelId: altPanelId};
+      window._altReg[regKey] = {alts: altSource, swapKey, sub, dateKey, panelId: altPanelId};
       return exData.alts.map((a,i)=>{
         const altEid = exId(sub, a.n);
         const altLastKg = getLastW(altEid);
@@ -3299,7 +3329,7 @@ function buildExRow(x, sub, dateKey){
       window._altReg[rk] = {swapKey, sub, dateKey, panelId: altPanelId};
       return '<div style="margin-top:6px;"><button data-rk="'+rk+'" class="_alt-reset" style="font-size:10px;padding:4px 10px;border-radius:20px;border:1px solid var(--coral-br);background:var(--coral-l);color:var(--coral);cursor:pointer;font-weight:600;">↩ Restaurar ('+x.n+')</button></div>';
     })() : ''}
-  </div>` : '';
+  </div>` ;
 
   return '<div>'
     + `<div class="ex-row">
@@ -4903,6 +4933,169 @@ const EX_DB={
     {n:'Hollow body',d:'Gimnasia. Máxima activación del core extendido.'},
   ]},
 };
+
+/* ── EJERCICIOS PAGE TABS ── */
+function ejTab(tab){
+  ['biblioteca','rutinas'].forEach(t=>{
+    const pane=document.getElementById('ej-pane-'+t);
+    const btn=document.getElementById('ej-tab-'+t);
+    if(!pane||!btn)return;
+    const on=t===tab;
+    pane.style.display=on?'block':'none';
+    btn.style.background=on?'var(--surf)':'transparent';
+    btn.style.color=on?'var(--ink)':'var(--ink3)';
+    btn.style.boxShadow=on?'var(--sh)':'none';
+  });
+  if(tab==='rutinas') renderRutinas();
+}
+
+/* ── ROUTINE CONFIGURATOR ── */
+// Storage for custom routine exercises
+let customFD={};
+try{customFD=JSON.parse(localStorage.getItem('fp_cfd')||'{}');}catch(e){}
+function persistCFD(){localStorage.setItem('fp_cfd',JSON.stringify(customFD));}
+
+// Returns the effective FD for a sub+variant, respecting customizations
+function getEffectiveFD(sub, variant){
+  const base = variant==='B' ? (FD_B[sub]||FD[sub]) : FD[sub];
+  if(!base) return null;
+  const key = sub+'_'+variant;
+  if(!customFD[key]) return base;
+  // Merge: replace exercises with custom ones
+  return {...base, ex: customFD[key]};
+}
+
+function renderRutinas(){
+  const body=document.getElementById('rutinas-body');
+  if(!body)return;
+  const subs=['Tren superior','Tren inferior','Full body'];
+  body.innerHTML=subs.map(sub=>{
+    return `<div style="margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:800;color:var(--ink);letter-spacing:-.2px;margin-bottom:10px;
+        border-left:3px solid var(--coral);padding-left:10px;">${sub}</div>
+      ${['A','B'].map(v=>{
+        const key=sub+'_'+v;
+        const base=v==='B'?(FD_B[sub]||FD[sub]):FD[sub];
+        const exercises=customFD[key]||base.ex;
+        const varCol=v==='A'?'var(--fuerza)':'var(--moss)';
+        const varBg=v==='A'?'var(--fuerza-bg)':'var(--moss-l)';
+        return `<div style="background:var(--surf);border:0.5px solid var(--brd);border-radius:16px;
+          margin-bottom:8px;overflow:hidden;box-shadow:var(--sh);">
+          <div style="background:${varBg};padding:9px 13px;display:flex;align-items:center;gap:7px;
+            border-bottom:0.5px solid var(--brd);">
+            <span style="font-size:12px;font-weight:800;color:${varCol};background:${varBg};
+              border:1px solid ${varCol === 'var(--fuerza)' ? 'var(--fuerza-br)' : 'rgba(61,110,74,.25)'};
+              padding:2px 9px;border-radius:20px;">Bloque ${v}</span>
+            <span style="font-size:11px;color:${varCol};opacity:.7;">${exercises.length} ejercicios</span>
+            <button onclick="resetRutina('${sub}','${v}')"
+              style="margin-left:auto;font-size:10px;padding:2px 8px;border-radius:20px;
+              border:1px solid rgba(100,80,50,.15);background:var(--surf2);color:var(--ink3);
+              cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">↺ Restablecer</button>
+          </div>
+          <div id="rutina-list-${key.replace(/ /g,'_')}" style="padding:4px 0;">
+            ${exercises.map((ex,idx)=>`
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 13px;
+                border-bottom:0.5px solid var(--brd);" data-key="${key}" data-idx="${idx}">
+                <div style="width:22px;height:22px;border-radius:6px;background:var(--surf2);
+                  display:flex;align-items:center;justify-content:center;
+                  font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);flex-shrink:0;">${idx+1}</div>
+                <div style="flex:1;font-size:12px;font-weight:600;color:var(--ink);">${ex.n}</div>
+                <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);">${ex.s}</div>
+                <button data-key="${key}" data-idx="${idx}" class="_rutina-change-btn"
+                  style="font-size:10px;padding:2px 8px;border-radius:20px;
+                  border:1px solid ${varCol === 'var(--fuerza)' ? 'var(--fuerza-br)' : 'rgba(61,110,74,.25)'};
+                  background:${varBg};color:${varCol};cursor:pointer;
+                  font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;">⇄</button>
+              </div>`).join('')}
+          </div>
+          <div style="padding:8px 13px;">
+            <button onclick="addRutinaEx('${sub}','${v}')"
+              style="width:100%;padding:8px;border-radius:10px;border:1px dashed rgba(100,80,50,.2);
+              background:transparent;font-size:11px;font-weight:600;color:var(--ink3);
+              cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">＋ Añadir ejercicio</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+// Delegated click for ⇄ buttons in rutinas
+document.addEventListener('click',function(e){
+  const btn=e.target.closest('._rutina-change-btn');
+  if(!btn)return;
+  const key=btn.dataset.key;
+  const idx=parseInt(btn.dataset.idx);
+  openRutinaExPicker(key,idx);
+});
+
+function openRutinaExPicker(key, idx){
+  // Show EX_DB picker in the hist-sheet
+  const allEx=Object.keys(EX_DB);
+  document.getElementById('hs-title').textContent='Cambiar ejercicio';
+  document.getElementById('hs-body').innerHTML=
+    '<div style="margin-bottom:8px;"><input id="rp-search" type="text" placeholder="Buscar ejercicio..." oninput="filterRPSearch(this.value)" style="width:100%;background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:8px 10px;font-size:12px;outline:none;"/></div>'
+    +'<div id="rp-list">'
+    +allEx.map(n=>`<div class="_rp-item" data-n="${n}" data-key="${key}" data-idx="${idx}"
+      style="padding:9px 12px;border-bottom:1px solid var(--brd);cursor:pointer;font-size:13px;
+      display:flex;align-items:center;gap:8px;">
+      <span style="font-size:14px;">${EX_DB[n].icon||'💪'}</span>
+      <div style="flex:1;"><div style="font-weight:600;color:var(--ink);">${n}</div>
+      <div style="font-size:10px;color:var(--ink3);">${EX_DB[n].muscle||''}</div></div>
+      </div>`).join('')
+    +'</div>';
+  document.getElementById('hist-sheet').classList.add('show');
+}
+
+// Delegated click for exercise picker items
+document.addEventListener('click',function(e){
+  const item=e.target.closest('._rp-item');
+  if(!item)return;
+  const n=item.dataset.n;
+  const key=item.dataset.key;
+  const idx=parseInt(item.dataset.idx);
+  setRutinaEx(key,idx,n);
+  document.getElementById('hist-sheet').classList.remove('show');
+});
+
+function filterRPSearch(q){
+  const list=document.getElementById('rp-list');
+  if(!list)return;
+  list.querySelectorAll('._rp-item').forEach(el=>{
+    el.style.display=el.dataset.n.toLowerCase().includes(q.toLowerCase())?'flex':'none';
+  });
+}
+
+function setRutinaEx(key,idx,newName){
+  const parts=key.split('_');
+  const variant=parts[parts.length-1]; // 'A' or 'B'
+  const sub=parts.slice(0,-1).join(' ');
+  const base=variant==='B'?(FD_B[sub]||FD[sub]):FD[sub];
+  const exercises=customFD[key]?[...customFD[key]]:[...base.ex];
+  if(idx<exercises.length){
+    exercises[idx]={...exercises[idx],n:newName};
+    customFD[key]=exercises;
+    persistCFD();
+    renderRutinas();
+  }
+}
+
+function addRutinaEx(sub,variant){
+  const key=sub+'_'+variant;
+  const base=variant==='B'?(FD_B[sub]||FD[sub]):FD[sub];
+  const exercises=customFD[key]?[...customFD[key]]:[...base.ex];
+  exercises.push({n:'Nuevo ejercicio',s:'3×12'});
+  customFD[key]=exercises;
+  persistCFD();
+  renderRutinas();
+}
+
+function resetRutina(sub,variant){
+  const key=sub+'_'+variant;
+  delete customFD[key];
+  persistCFD();
+  renderRutinas();
+}
 
 function renderEjercicios(){
   const body=document.getElementById('ejercicios-body');
