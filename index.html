@@ -2826,7 +2826,7 @@ function renderHome(){
   if(todayIdx>=0){
     const e = entry(tk,todayIdx);
     if(e.type==='fuerza'&&e.sub){
-      const fd=getFDForDate(fuAct?fuAct.sub:e.sub,key)||FD['Tren superior'];
+      const fuSub=(typeof fuAct!=='undefined'&&fuAct)?fuAct.sub:e.sub;const fd=getFDForDate(fuSub,key)||FD['Tren superior'];
       trainTotal=fd.ex.length;
       trainDone=fd.ex.filter(x=>(exChecks[tk]||{})[exId(e.sub,x.n)]).length;
       trainPct=Math.round(trainDone/trainTotal*100);
@@ -2895,7 +2895,7 @@ function renderHome(){
   ];
   const grid=document.getElementById('home-prog-grid');
   if(grid) grid.innerHTML=progs.map(p=>`
-    <div onclick="goPage('${p.dest}',document.getElementById('bn-${p.dest}'))"
+    <div onclick="goPage('${p.dest}',document.getElementById('bn-'+p.dest))"
       style="padding:11px 0;border-bottom:0.5px solid var(--brd);cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent;"
       onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
@@ -3308,13 +3308,16 @@ function buildExRow(x, sub, dateKey){
   const isSwapped = activeName !== x.n;
   const altPanelId = 'alt_' + exId(sub, x.n);
 
-  // Build alt panel — use EX_DB[x.n] (A block) or EX_DB[activeName] (B block)
-  // or fall back to a universal panel with ALL EX_DB exercises as options
-  const exData = EX_DB[x.n] || EX_DB[activeName];
+  // Build alt panel — look up EX_DB with exact match, then partial, then fallback to full list
+  const exData = EX_DB[x.n] || EX_DB[activeName]
+    || Object.entries(EX_DB).find(([k])=>x.n.includes(k)||k.includes(x.n.split(' ')[0]))?.[1]
+    || null;
   const altBtn = `<button class="ex-hist" onclick="event.stopPropagation();toggleAltPanel('${altPanelId}','${x.n}','${sub}','${dateKey}')" title="Cambiar ejercicio">⇄</button>`;
 
   // Build alternatives list: prefer EX_DB[x.n].alts, else all EX_DB keys
-  const altSource = exData ? exData.alts : Object.keys(EX_DB).map(n=>({n,d:EX_DB[n].muscle||''}));
+  const altSource = (exData && exData.alts && exData.alts.length)
+    ? exData.alts
+    : Object.keys(EX_DB).map(n=>({n, d:EX_DB[n].muscle||''}));
   const altPanel = `<div id="${altPanelId}" style="display:none;background:var(--surf2);border-radius:10px;margin:4px 0 6px;padding:8px;border:1px solid var(--brd2);">
     <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;">Alternativas · ${x.n}</div>
     ${(()=>{
@@ -3322,7 +3325,7 @@ function buildExRow(x, sub, dateKey){
       const regKey = 'alts_' + altPanelId;
       window._altReg = window._altReg || {};
       window._altReg[regKey] = {alts: altSource, swapKey, sub, dateKey, panelId: altPanelId};
-      return exData.alts.map((a,i)=>{
+      return (exData&&exData.alts?exData.alts:[]).map((a,i)=>{
         const altEid = exId(sub, a.n);
         const altLastKg = getLastW(altEid);
         const isActive = activeName === a.n;
@@ -4545,6 +4548,33 @@ function feSetQtyMult(mult){
   feRecalcAI();
 }
 
+function addFoodItem(){
+  // Manual entry from Buscar tab
+  const name = (document.getElementById('fe-new-name')?.value||'').trim();
+  if(!name || !feCurrentMealId) return;
+  const qty  = parseFloat(document.getElementById('fe-qty')?.value)||100;
+  const unit = document.getElementById('fe-qty-unit')?.value||'g';
+  const kcal = parseFloat(document.getElementById('fe-new-kcal')?.value)||0;
+  const prot = parseFloat(document.getElementById('fe-new-prot')?.value)||0;
+  const carb = parseFloat(document.getElementById('fe-new-carb')?.value)||0;
+  const fat  = parseFloat(document.getElementById('fe-new-fat')?.value)||0;
+  const label = (qty!==100||unit!=='g') ? name+' ('+qty+unit+')' : name;
+  const item = {id:'custom_'+feCurrentMealId+'_'+Date.now(),name:label,kcal,prot,carb,fat};
+  const existing = getCustomItems(feCurrentMealId);
+  existing.push(item);
+  saveCustomItems(feCurrentMealId, existing);
+  ['fe-new-name','fe-new-kcal','fe-new-prot','fe-new-carb','fe-new-fat'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  _feBase=null;
+  const qtyEl=document.getElementById('fe-qty'); if(qtyEl) qtyEl.value=100;
+  const liveEl=document.getElementById('fe-qty-kcal-live'); if(liveEl) liveEl.textContent='—';
+  const hint=document.getElementById('fe-macro-hint'); if(hint) hint.style.display='none';
+  const meal=MEALS_CACHE.find(m=>m.id===feCurrentMealId);
+  if(meal) renderFoodEditorList(meal);
+  renderDiet();
+}
+
 function feAddFromAI(){
   if(!_feAIResult||!feCurrentMealId)return;
   const qty=parseFloat(document.getElementById('fe-qty')?.value)||1;
@@ -4950,6 +4980,102 @@ const EX_DB={
     {n:'Dead bug',d:'Estabilización lumbo-pélvica. Ideal con dolor de espalda.'},
     {n:'Crunch en polea',d:'Carga progresiva en el recto abdominal.'},
     {n:'Hollow body',d:'Gimnasia. Máxima activación del core extendido.'},
+  ]},
+
+  /* ── B-block exercises (aliases with alts) ── */
+  'Sentadilla búlgara (split squat)':{muscle:'Cuádriceps, glúteos',icon:'🦵',alts:[
+    {n:'Sentadilla goblet',d:'Versión bilateral más sencilla.'},
+    {n:'Zancadas (lunges)',d:'Similar patrón unilateral.'},
+    {n:'Sentadilla con barra',d:'Bilateral, mayor carga posible.'},
+    {n:'Prensa de piernas',d:'Guiada, sin demanda de equilibrio.'},
+  ]},
+  'Peso muerto convencional':{muscle:'Isquiotibiales, glúteos, espalda',icon:'🦵',alts:[
+    {n:'Peso muerto rumano',d:'Énfasis en isquios, menor rango lumbar.'},
+    {n:'Peso muerto sumo',d:'Mayor apertura, énfasis en glúteos.'},
+    {n:'Buenos días (good mornings)',d:'Patrón similar sin barra en suelo.'},
+    {n:'Hip thrust',d:'Aislamiento de glúteos sin carga lumbar.'},
+  ]},
+  'Hack squat en máquina':{muscle:'Cuádriceps, glúteos',icon:'🦵',alts:[
+    {n:'Prensa de piernas',d:'Muy similar, diferente ángulo.'},
+    {n:'Sentadilla goblet',d:'Libre, activa más el core.'},
+    {n:'Sentadilla con barra',d:'Mayor demanda de estabilización.'},
+  ]},
+  'Curl femoral tumbado':{muscle:'Isquiotibiales (aislamiento)',icon:'🦵',alts:[
+    {n:'Curl femoral',d:'Mismo movimiento, diferente maquina.'},
+    {n:'Nordic curl (curl nórdico)',d:'Sin máquina, muy intenso.'},
+    {n:'Peso muerto rumano',d:'Compuesto que trabaja isquios.'},
+    {n:'Curl femoral de pie',d:'Unilateral de pie.'},
+  ]},
+  'Zancadas (lunges)':{muscle:'Cuádriceps, glúteos, isquiotibiales',icon:'🦵',alts:[
+    {n:'Sentadilla búlgara',d:'Más estable, mayor énfasis glúteo.'},
+    {n:'Step-up con mancuernas',d:'Subida a cajón, muy funcional.'},
+    {n:'Sentadilla goblet',d:'Bilateral si falta equilibrio.'},
+  ]},
+  'Gemelos sentado (máquina)':{muscle:'Gemelos (sóleo)',icon:'🦵',alts:[
+    {n:'Gemelos de pie',d:'Activa más el gastrocnemio.'},
+    {n:'Elevación de talones unilateral',d:'Unilateral, mayor rango.'},
+    {n:'Prensa de piernas (gemelos)',d:'Con prensa como apoyo.'},
+  ]},
+  'Press de mancuernas inclinado':{muscle:'Pecho, deltoides anterior',icon:'💪',alts:[
+    {n:'Press banca',d:'Bilateral con barra, más carga.'},
+    {n:'Aperturas en banco inclinado',d:'Aislamiento pectoral inclinado.'},
+    {n:'Press inclinado',d:'Similar con barra.'},
+    {n:'Crossover en polea',d:'Tensión constante en pectoral.'},
+  ]},
+  'Dominadas (pull-ups)':{muscle:'Espalda, bíceps',icon:'💪',alts:[
+    {n:'Jalones al pecho',d:'Similar patrón, carga ajustable.'},
+    {n:'Remo con barra',d:'Horizontal, trabaja espalda media.'},
+    {n:'Dominadas con asistencia',d:'Misma mecánica con ayuda.'},
+  ]},
+  'Press Arnold':{muscle:'Hombros (completo)',icon:'💪',alts:[
+    {n:'Press militar',d:'Movimiento más simple, más carga.'},
+    {n:'Press de hombros sentado',d:'Guiado, más estable.'},
+    {n:'Elevaciones laterales',d:'Aislamiento de deltoides lateral.'},
+  ]},
+  'Jalones con agarre neutro':{muscle:'Espalda, bíceps',icon:'💪',alts:[
+    {n:'Jalones al pecho',d:'Agarre en supinación, más bíceps.'},
+    {n:'Remo en polea baja',d:'Horizontal, diferente ángulo.'},
+    {n:'Pull-over con mancuerna',d:'Estira el dorsal, diferente patrón.'},
+  ]},
+  'Curl martillo':{muscle:'Bíceps braquial, braquiorradial',icon:'💪',alts:[
+    {n:'Curl de bíceps',d:'Con barra, más carga bilateral.'},
+    {n:'Curl concentrado',d:'Aislamiento máximo sentado.'},
+    {n:'Curl inclinado con mancuernas',d:'Mayor estiramiento del bíceps.'},
+  ]},
+  'Press francés (skull crusher)':{muscle:'Tríceps (larga porción)',icon:'💪',alts:[
+    {n:'Tríceps en polea',d:'Carga constante, sin compresión.'},
+    {n:'Extensión de tríceps sobre la cabeza',d:'Mayor énfasis en porción larga.'},
+    {n:'Press cerrado con barra',d:'Compuesto, más carga total.'},
+  ]},
+  'Sentadilla frontal':{muscle:'Cuádriceps, core',icon:'🦵',alts:[
+    {n:'Sentadilla con barra',d:'Más carga, menos demanda de movilidad.'},
+    {n:'Sentadilla goblet',d:'Patrón similar, más accesible.'},
+    {n:'Hack squat en máquina',d:'Guiado, menos exigencia técnica.'},
+  ]},
+  'Hip thrust con mancuerna':{muscle:'Glúteos, isquiotibiales',icon:'🦵',alts:[
+    {n:'Hip thrust',d:'Con barra, mayor carga.'},
+    {n:'Puente de glúteos en suelo',d:'Sin banco, más accesible.'},
+    {n:'Patada de glúteo en polea',d:'Aislamiento de glúteo mayor.'},
+  ]},
+  'Remo Pendlay':{muscle:'Espalda media, trapecio',icon:'💪',alts:[
+    {n:'Remo con barra',d:'Similar, torso más inclinado.'},
+    {n:'Remo T-bar',d:'Con apoyo de pecho, muy estable.'},
+    {n:'Remo con mancuerna un brazo',d:'Unilateral, mayor rango.'},
+  ]},
+  'Press de mancuernas plano':{muscle:'Pecho, tríceps, deltoides',icon:'💪',alts:[
+    {n:'Press banca',d:'Con barra, más carga.'},
+    {n:'Press de mancuernas inclinado',d:'Mayor énfasis en pecho superior.'},
+    {n:'Fondos en paralelas (dips)',d:'Peso corporal, muy completo.'},
+  ]},
+  'Reverse fly con mancuernas':{muscle:'Deltoides posterior, romboides',icon:'💪',alts:[
+    {n:'Face pull',d:'Con polea, más carga y rango.'},
+    {n:'Remo al cuello en polea',d:'Trabaja deltoides posterior y trapecio.'},
+    {n:'Remo en máquina agarre alto',d:'Similar pero guiado.'},
+  ]},
+  'Plancha lateral':{muscle:'Core (oblicuos, cuadrado lumbar)',icon:'💪',alts:[
+    {n:'Plancha',d:'Bilateral, estabilización frontal.'},
+    {n:'Dead bug',d:'Más dinámico, estabilización lumbo-pélvica.'},
+    {n:'Plancha con elevación de brazo',d:'Mayor inestabilidad.'},
   ]},
 };
 
