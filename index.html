@@ -1714,6 +1714,25 @@ body {
 </div>div>
 </div>
 
+<!-- RUTINAS EXERCISE PICKER SHEET -->
+<div class="hist-sheet-overlay" id="rutinas-picker-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="hist-sheet" style="max-height:82vh;overflow-y:auto;display:flex;flex-direction:column;">
+    <div class="hs-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0;">
+      <div class="hs-title">Cambiar ejercicio</div>
+      <button style="background:none;border:none;font-size:20px;color:var(--ink3);cursor:pointer;" onclick="document.getElementById('rutinas-picker-overlay').classList.remove('show')">×</button>
+    </div>
+    <div style="flex-shrink:0;margin-bottom:10px;">
+      <input id="rp-search-inp" type="text" placeholder="Buscar ejercicio..."
+        oninput="filterRPSearch(this.value)"
+        style="width:100%;background:var(--surf2);border:1px solid var(--brd2);border-radius:10px;
+        padding:10px 12px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;
+        color:var(--ink);outline:none;"/>
+    </div>
+    <div id="rp-list-inner" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+  </div>
+</div>
+
 <!-- EJERCICIOS OVERLAY (full-screen sheet) -->
 <div class="hist-sheet-overlay" id="alt-sheet" onclick="closeAltSheet(event)">
   <div class="hist-sheet" style="max-height:82vh;overflow-y:auto;">
@@ -5030,21 +5049,22 @@ document.addEventListener('click',function(e){
 });
 
 function openRutinaExPicker(key, idx){
-  // Show EX_DB picker in the hist-sheet
   const allEx=Object.keys(EX_DB);
-  document.getElementById('hs-title').textContent='Cambiar ejercicio';
-  document.getElementById('hs-body').innerHTML=
-    '<div style="margin-bottom:8px;"><input id="rp-search" type="text" placeholder="Buscar ejercicio..." oninput="filterRPSearch(this.value)" style="width:100%;background:var(--surf);border:1px solid var(--brd2);border-radius:8px;padding:8px 10px;font-size:12px;outline:none;"/></div>'
-    +'<div id="rp-list">'
-    +allEx.map(n=>`<div class="_rp-item" data-n="${n}" data-key="${key}" data-idx="${idx}"
-      style="padding:9px 12px;border-bottom:1px solid var(--brd);cursor:pointer;font-size:13px;
-      display:flex;align-items:center;gap:8px;">
-      <span style="font-size:14px;">${EX_DB[n].icon||'💪'}</span>
-      <div style="flex:1;"><div style="font-weight:600;color:var(--ink);">${n}</div>
-      <div style="font-size:10px;color:var(--ink3);">${EX_DB[n].muscle||''}</div></div>
-      </div>`).join('')
-    +'</div>';
-  document.getElementById('hist-sheet').classList.add('show');
+  // Use dedicated rutinas picker sheet
+  const listEl=document.getElementById('rp-list-inner');
+  const searchEl=document.getElementById('rp-search-inp');
+  if(searchEl) searchEl.value='';
+  if(listEl) listEl.innerHTML=allEx.map(n=>
+    '<div class="_rp-item" data-n="'+n+'" data-key="'+key+'" data-idx="'+idx+'"'
+    +' style="padding:11px 14px;border-bottom:0.5px solid var(--brd);cursor:pointer;display:flex;align-items:center;gap:10px;-webkit-tap-highlight-color:transparent;">'
+    +'<span style="font-size:18px;flex-shrink:0;">'+(EX_DB[n].icon||'💪')+'</span>'
+    +'<div style="flex:1;min-width:0;">'
+    +'<div style="font-size:13px;font-weight:600;color:var(--ink);">'+n+'</div>'
+    +'<div style="font-size:10px;color:var(--ink3);margin-top:1px;">'+(EX_DB[n].muscle||'')+'</div>'
+    +'</div>'
+    +'</div>'
+  ).join('');
+  document.getElementById('rutinas-picker-overlay').classList.add('show');
 }
 
 // Delegated click for exercise picker items
@@ -5055,11 +5075,11 @@ document.addEventListener('click',function(e){
   const key=item.dataset.key;
   const idx=parseInt(item.dataset.idx);
   setRutinaEx(key,idx,n);
-  document.getElementById('hist-sheet').classList.remove('show');
+  document.getElementById('rutinas-picker-overlay').classList.remove('show');
 });
 
 function filterRPSearch(q){
-  const list=document.getElementById('rp-list');
+  const list=document.getElementById('rp-list-inner');
   if(!list)return;
   list.querySelectorAll('._rp-item').forEach(el=>{
     el.style.display=el.dataset.n.toLowerCase().includes(q.toLowerCase())?'flex':'none';
