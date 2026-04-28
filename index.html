@@ -2161,6 +2161,40 @@ function persistCWK(){localStorage.setItem('fp_cwk',JSON.stringify(customWorkout
 let checks=JSON.parse(localStorage.getItem('fp_checks')||'{}');
 let wlog=JSON.parse(localStorage.getItem('fp_wlog')||'[]');
 let exWeights=JSON.parse(localStorage.getItem('fp_exw')||'{}');
+
+/* ── PPL weight migration: copy old sub-prefixed keys to new PPL keys ── */
+(function(){
+  const m={
+    'Tren_superior_Press_banca':              'Push___Empuje_Press_banca_plano',
+    'Tren_superior_Press_banca_inclinado':    'Push___Empuje_Press_de_mancuernas_inclinado',
+    'Tren_superior_Press_militar':            'Push___Empuje_Press_militar_con_barra',
+    'Tren_superior_Elevaciones_laterales':    'Push___Empuje_Elevaciones_laterales',
+    'Tren_superior_Tr_ceps_en_polea':         'Push___Empuje_Tr_ceps_en_polea',
+    'Tren_superior_Press_franc_s__skull_crusher_':'Push___Empuje_Press_franc_s__skull_crusher_',
+    'Tren_superior_Jalones_al_pecho':         'Pull___Tir_n_Jalones_al_pecho',
+    'Tren_superior_Remo_con_barra':           'Pull___Tir_n_Remo_con_barra',
+    'Tren_superior_Jalones_con_agarre_neutro':'Pull___Tir_n_Jalones_con_agarre_neutro',
+    'Tren_superior_Curl_de_b_ceps':           'Pull___Tir_n_Curl_de_b_ceps',
+    'Tren_superior_Curl_martillo':            'Pull___Tir_n_Curl_martillo',
+    'Tren_inferior_Sentadilla_goblet':        'Legs___Piernas_Sentadilla_con_barra',
+    'Tren_inferior_Sentadilla__cualquier_variante_':'Legs___Piernas_Sentadilla_con_barra',
+    'Tren_inferior_Prensa_de_piernas':        'Legs___Piernas_Prensa_de_piernas',
+    'Tren_inferior_Peso_muerto_rumano':       'Legs___Piernas_Peso_muerto_rumano',
+    'Tren_inferior_Extensiones_cu_driceps':   'Legs___Piernas_Extensiones_cu_driceps',
+    'Tren_inferior_Extensiones_de_cu_driceps':'Legs___Piernas_Extensiones_cu_driceps',
+    'Tren_inferior_Curl_femoral':             'Legs___Piernas_Curl_femoral',
+    'Tren_inferior_Gemelos_de_pie':           'Legs___Piernas_Gemelos_de_pie',
+    'custom_Abductor':                        'Legs___Piernas_Abductor',
+    'custom_Aductor':                         'Legs___Piernas_Aductor',
+    'custom_Aperturas_pecho_plano':           'Push___Empuje_Aperturas_pecho_plano',
+    'custom_Aperturas_plano':                 'Push___Empuje_Aperturas_plano',
+    'custom_Patada_tr_ceps_a_una_mano_polea': 'Push___Empuje_Patada_tr_ceps_a_una_mano_polea',
+  };
+  let changed=false;
+  const ew=exWeights;
+  Object.entries(m).forEach(([ok,nk])=>{if(ew[ok]&&!ew[nk]){ew[nk]=ew[ok];changed=true;}});
+  if(changed)localStorage.setItem('fp_exw',JSON.stringify(ew));
+})();
 let exChecks=JSON.parse(localStorage.getItem('fp_exc')||'{}');
 let cardioChecks=JSON.parse(localStorage.getItem('fp_cc')||'{}');
 let chartI=null;
