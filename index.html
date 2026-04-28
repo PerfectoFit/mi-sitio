@@ -1449,6 +1449,7 @@ body {
     <div class="toolbar">
       <button class="tbtn" id="edit-btn" onclick="toggleEdit()">✦ Editar días</button>
       <button class="tbtn reset" onclick="resetWeek()">Restablecer</button>
+      <button class="tbtn" onclick="applyPPLPlan()" style="background:var(--fuerza-bg);color:var(--fuerza);border:1px solid var(--fuerza-br);font-weight:700;border-radius:9px;padding:7px 12px;font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">✦ Plan PPL</button>
     </div>
     <div class="edit-hint" id="edit-hint">Toca cualquier día para cambiar su actividad</div>
     <div class="week-scroll"><div class="week-grid" id="week-grid"></div></div>
@@ -3744,6 +3745,37 @@ function toggleEdit(){
 }
 function changeWeek(d){wkOff+=d;closeDetail();renderTraining();}
 function resetWeek(){weekDays(wkOff).forEach(d=>delete wkData[fmt(d)]);persist();closeDetail();renderTraining();}
+
+function applyPPLPlan(){
+  if(!confirm('¿Aplicar el nuevo plan PPL desde hoy en adelante?\nEl historial pasado no se toca.'))return;
+  const pplMap={
+    1:{type:'fuerza',sub:'Push — Empuje',time:'18–19 h'},
+    2:{type:'fuerza',sub:'Pull — Tirón',time:'18–19 h'},
+    3:{type:'descanso',sub:'Descanso activo',time:''},
+    4:{type:'fuerza',sub:'Legs — Piernas',time:'18–19 h'},
+    5:{type:'fuerza',sub:'Brazos + Movilidad',time:'18–19 h'},
+    6:{type:'padel',sub:'Partido 90 min',time:'mañana'},
+    0:{type:'descanso',sub:'Descanso activo',time:''},
+  };
+  const today=fmt(new Date());
+  // Remove future wkData entries
+  Object.keys(wkData).forEach(k=>{if(k>=today)delete wkData[k];});
+  // Apply PPL for next 12 weeks from Monday of current week
+  const start=new Date();
+  const dow=start.getDay();
+  const toMon=dow===0?-6:1-dow;
+  start.setDate(start.getDate()+toMon);
+  for(let w=0;w<12;w++){
+    for(let d=0;d<7;d++){
+      const date=new Date(start.getFullYear(),start.getMonth(),start.getDate()+w*7+d);
+      const key=fmt(date);
+      if(key<today)continue;
+      pplMap[date.getDay()] && (wkData[key]=[{...pplMap[date.getDay()]}]);
+    }
+  }
+  persist();closeDetail();renderTraining();
+  alert('✅ Plan PPL aplicado desde hoy.');
+}
 
 /* ─── MODAL ─── */
 function openModal(key,i,date){
