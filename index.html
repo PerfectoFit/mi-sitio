@@ -2329,33 +2329,20 @@ const CARDIO_OPTS=[
 
 /* Generate weekly plan from profile */
 function buildDefaultPlan(profile){
-  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  let plan=Array(7).fill(null).map(()=>({type:'descanso',sub:'Descanso activo',time:''}));
-  const trains=profile.trains||[];
-  const hasPadel=trains.includes('padel');
-  const hasFuerza=trains.includes('fuerza');
-  const padelDays=profile.padelDays||3;
-  const fuerzaDays=profile.fuerzaDays||3;
-  // PPL Phase 2: fixed day → session mapping
-  // Mon=Push, Tue=Pull, Wed=rest/padel, Thu=Legs, Fri=Brazos+Movilidad, Sat=padel, Sun=rest
+  // PPL Phase 2 fixed plan
   const pplMap={
-    0:{type:'fuerza',sub:'Push — Empuje',time:'18–19 h'},
-    1:{type:'fuerza',sub:'Pull — Tirón',time:'18–19 h'},
-    2:{type:'descanso',sub:'Descanso activo',time:''},
-    3:{type:'fuerza',sub:'Legs — Piernas',time:'18–19 h'},
-    4:{type:'fuerza',sub:'Brazos + Movilidad',time:'18–19 h'},
-    5:{type:'padel',sub:'Partido 90 min',time:'mañana'},
-    6:{type:'descanso',sub:'Descanso activo',time:''},
+    1:{type:'fuerza',sub:'Push — Empuje',time:'18–19 h'},
+    2:{type:'fuerza',sub:'Pull — Tirón',time:'18–19 h'},
+    3:{type:'descanso',sub:'Descanso activo',time:''},
+    4:{type:'fuerza',sub:'Legs — Piernas',time:'18–19 h'},
+    5:{type:'fuerza',sub:'Brazos + Movilidad',time:'18–19 h'},
+    6:{type:'padel',sub:'Partido 90 min',time:'mañana'},
+    0:{type:'descanso',sub:'Descanso activo',time:''},
   };
-  let pi=0,fi=0;
-  // Apply PPL plan as default (user can override each day)
-  for(let d=0;d<7;d++){
-    plan[d]={...pplMap[d]};
-  }
-  // If user has padel days configured differently, honour that
-  const padelSlots=[1,3,5,6,0,2,4];
-  const fuerzaSlots=[0,2,4,1,3,6,5];
-  return plan;
+  return Array(7).fill(null).map((_,i)=>{
+    const dow=(i+1)%7; // i=0→Mon(1), i=6→Sun(0)
+    return {...(pplMap[dow]||{type:'descanso',sub:'Descanso activo',time:''})};
+  });
 }
 
 function entry(key,i){
@@ -3747,7 +3734,7 @@ function changeWeek(d){wkOff+=d;closeDetail();renderTraining();}
 function resetWeek(){weekDays(wkOff).forEach(d=>delete wkData[fmt(d)]);persist();closeDetail();renderTraining();}
 
 function applyPPLPlan(){
-  if(!confirm('¿Aplicar el nuevo plan PPL desde hoy en adelante?\nEl historial pasado no se toca.'))return;
+  if(!confirm('¿Aplicar plan PPL desde hoy en adelante?\nEl historial pasado no se toca.'))return;
   const pplMap={
     1:{type:'fuerza',sub:'Push — Empuje',time:'18–19 h'},
     2:{type:'fuerza',sub:'Pull — Tirón',time:'18–19 h'},
@@ -3758,41 +3745,37 @@ function applyPPLPlan(){
     0:{type:'descanso',sub:'Descanso activo',time:''},
   };
   const today=fmt(new Date());
-  // Remove future wkData entries
   Object.keys(wkData).forEach(k=>{if(k>=today)delete wkData[k];});
-  // Apply PPL for next 12 weeks from Monday of current week
   const start=new Date();
   const dow=start.getDay();
   const toMon=dow===0?-6:1-dow;
   start.setDate(start.getDate()+toMon);
   for(let w=0;w<12;w++){
     for(let d=0;d<7;d++){
-      const date=new Date(start.getFullYear(),start.getMonth(),start.getDate()+w*7+d);
-      const key=fmt(date);
+      const dt=new Date(start.getFullYear(),start.getMonth(),start.getDate()+w*7+d);
+      const key=fmt(dt);
       if(key<today)continue;
-      pplMap[date.getDay()] && (wkData[key]=[{...pplMap[date.getDay()]}]);
+      const plan=pplMap[dt.getDay()];
+      if(plan)wkData[key]=[{...plan}];
     }
   }
   persist();closeDetail();renderTraining();
-  alert('✅ Plan PPL aplicado desde hoy.');
+  alert('✅ Plan PPL aplicado.');
 }
 
-/* ─── MODAL ─── */
 function openModal(key,i,date){
   mCtx={key,i};pType=null;pSub=null;
-  document.getElementById('modal-lbl').textContent=`${DAYS[i===6?0:i+1]}, ${date.getDate()} de ${MON[date.getMonth()]}`;
-  // Build type grid from profile trains
+  document.getElementById('modal-lbl').textContent=DAYS[i===6?0:i+1]+', '+date.getDate()+' de '+MON[date.getMonth()];
   const grid=document.getElementById('modal-type-grid');
-  const opts=[
-    {t:'padel',ico:'🎾',lbl:'Pádel',cls:'sp'},
-    {t:'fuerza',ico:'🏋️',lbl:'Fuerza',cls:'sf'},
-    {t:'cardio',ico:'🏃',lbl:'Cardio',cls:'sl'},
-    {t:'custom',ico:'✏️',lbl:'Entreno libre',cls:'sl'},
-    {t:'descanso',ico:'🌿',lbl:'Descanso',cls:'sd'},
+  const typeOpts=[
+    {t:'padel',ico:'🎾',lbl:'Pádel'},
+    {t:'fuerza',ico:'🏋️',lbl:'Fuerza'},
+    {t:'cardio',ico:'🏃',lbl:'Cardio'},
+    {t:'custom',ico:'✏️',lbl:'Entreno libre'},
+    {t:'descanso',ico:'🌿',lbl:'Descanso'},
   ];
-  // PPL subs for fuerza
-  const fuerza_subs = ['Push — Empuje','Pull — Tirón','Legs — Piernas','Brazos + Movilidad','Tren superior','Tren inferior','Full body'];
-  grid.innerHTML=opts.map(o=>`<button class="topt" id="op-${o.t}" onclick="pickType('${o.t}')"><span class="tico">${o.ico}</span>${o.lbl}</button>`).join('');
+  grid.innerHTML=typeOpts.map(o=>'<button class="topt _topt-btn" id="op-'+o.t+'" data-t="'+o.t+'"><span class="tico">'+o.ico+'</span>'+o.lbl+'</button>').join('');
+  grid.querySelectorAll('._topt-btn').forEach(b=>b.addEventListener('click',()=>pickType(b.dataset.t)));
   document.querySelectorAll('#ms2 .sopt').forEach(s=>s.classList.remove('chosen'));
   document.getElementById('btn-apply').classList.remove('ready');
   document.getElementById('ms1').style.display='block';
@@ -3803,7 +3786,7 @@ function closeModal(){document.getElementById('modal').classList.remove('show');
 function pickType(t){
   pType=t;
   document.querySelectorAll('#modal-type-grid .topt').forEach(x=>x.className='topt');
-  const cls={padel:'sp',fuerza:'sf',descanso:'sd',libre:'sl',cardio:'sl',custom:'sl'}[t];
+  const cls={padel:'sp',fuerza:'sf',descanso:'sd',libre:'sl',cardio:'sl',custom:'sl'}[t]||'sl';
   const el=document.getElementById('op-'+t);if(el)el.classList.add(cls);
   if(t==='fuerza'){
     document.getElementById('ms1').style.display='none';
@@ -3816,6 +3799,7 @@ function pickType(t){
     document.getElementById('btn-apply').classList.add('ready');
   }
 }
+
 function backStep(){
   pType=null;pSub=null;
   document.querySelectorAll('#modal-type-grid .topt').forEach(x=>x.className='topt');
@@ -3826,10 +3810,16 @@ function backStep(){
 function pickSub(s){
   pSub=s;
   document.querySelectorAll('#ms2 .sopt').forEach(x=>x.classList.remove('chosen'));
-  const m={'Push — Empuje':'sub-push','Pull — Tirón':'sub-pull','Legs — Piernas':'sub-legs','Brazos + Movilidad':'sub-brazos','Tren superior':'sub-sup','Tren inferior':'sub-inf','Full body':'sub-fb'};
-  const chosenEl=document.getElementById(m[s]); if(chosenEl) chosenEl.classList.add('chosen');
+  const m={
+    'Push — Empuje':'sub-push','Pull — Tirón':'sub-pull',
+    'Legs — Piernas':'sub-legs','Brazos + Movilidad':'sub-brazos',
+    'Tren superior':'sub-sup','Tren inferior':'sub-inf','Full body':'sub-fb'
+  };
+  const el=document.getElementById(m[s]||'');
+  if(el)el.classList.add('chosen');
   document.getElementById('btn-apply').classList.add('ready');
 }
+
 function applyModal(){
   if(!pType||!mCtx)return;
   if(pType==='fuerza'&&!pSub)return;
