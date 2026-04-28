@@ -3793,7 +3793,7 @@ function openModal(key,i,date){
   // PPL subs for fuerza
   const fuerza_subs = ['Push — Empuje','Pull — Tirón','Legs — Piernas','Brazos + Movilidad','Tren superior','Tren inferior','Full body'];
   grid.innerHTML=opts.map(o=>`<button class="topt" id="op-${o.t}" onclick="pickType('${o.t}')"><span class="tico">${o.ico}</span>${o.lbl}</button>`).join('');
-  ['sup','inf','fb'].forEach(s=>document.getElementById('sub-'+s).classList.remove('chosen'));
+  document.querySelectorAll('#ms2 .sopt').forEach(s=>s.classList.remove('chosen'));
   document.getElementById('btn-apply').classList.remove('ready');
   document.getElementById('ms1').style.display='block';
   document.getElementById('ms2').style.display='none';
@@ -3825,9 +3825,9 @@ function backStep(){
 }
 function pickSub(s){
   pSub=s;
-  ['sup','inf','fb'].forEach(x=>document.getElementById('sub-'+x).classList.remove('chosen'));
+  document.querySelectorAll('#ms2 .sopt').forEach(x=>x.classList.remove('chosen'));
   const m={'Push — Empuje':'sub-push','Pull — Tirón':'sub-pull','Legs — Piernas':'sub-legs','Brazos + Movilidad':'sub-brazos','Tren superior':'sub-sup','Tren inferior':'sub-inf','Full body':'sub-fb'};
-  document.getElementById(m[s]).classList.add('chosen');
+  const chosenEl=document.getElementById(m[s]); if(chosenEl) chosenEl.classList.add('chosen');
   document.getElementById('btn-apply').classList.add('ready');
 }
 function applyModal(){
