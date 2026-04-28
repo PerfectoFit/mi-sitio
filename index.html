@@ -2203,6 +2203,38 @@ const DS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MON=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
 const FD={
+  'Push — Empuje':{kcal:'~450 kcal',dur:'65 min',ex:[
+    {n:'Press banca plano',s:'4×8–10'},
+    {n:'Press de mancuernas inclinado',s:'4×10–12'},
+    {n:'Press militar con barra',s:'4×8–10'},
+    {n:'Elevaciones laterales',s:'4×12–15'},
+    {n:'Tríceps en polea',s:'4×12–15'},
+    {n:'Press francés (skull crusher)',s:'3×12'}]},
+  'Pull — Tirón':{kcal:'~430 kcal',dur:'65 min',ex:[
+    {n:'Jalones al pecho',s:'4×8–10'},
+    {n:'Remo con barra',s:'4×10–12'},
+    {n:'Remo mancuerna un brazo',s:'4×10–12'},
+    {n:'Jalones con agarre neutro',s:'3×12'},
+    {n:'Curl de bíceps',s:'4×10–12'},
+    {n:'Curl martillo',s:'3×12'}]},
+  'Legs — Piernas':{kcal:'~540 kcal',dur:'70 min',ex:[
+    {n:'Sentadilla con barra',s:'4×8–10'},
+    {n:'Prensa de piernas',s:'4×10–12'},
+    {n:'Peso muerto rumano',s:'4×10'},
+    {n:'Extensiones cuádriceps',s:'3×12–15'},
+    {n:'Curl femoral',s:'3×12–15'},
+    {n:'Gemelos de pie',s:'4×15–20'}]},
+  'Brazos + Movilidad':{kcal:'~280 kcal',dur:'60 min',ex:[
+    {n:'Curl concentrado',s:'4×12'},
+    {n:'Curl inclinado con mancuernas',s:'3×12'},
+    {n:'Extensión tríceps sobre cabeza',s:'4×12'},
+    {n:'Patada de tríceps (kickback)',s:'3×12'},
+    {n:'Curl de muñeca con barra',s:'3×15'},
+    {n:'Rotaciones de hombro con banda',s:'3×15/lado'},
+    {n:'Apertura torácica en banco',s:'3×12'},
+    {n:'Hip 90/90 rotación de cadera',s:'3×60 seg'},
+    {n:'Estiramiento pectoral en marco',s:'3×30 seg'}]},
+  /* Legacy — kept for backward compat with stored wkData */
   'Tren superior':{kcal:'~450 kcal',dur:'60–75 min',ex:[
     {n:'Press banca',s:'4×10–12'},{n:'Remo con barra',s:'4×10–12'},
     {n:'Press militar',s:'4×10–12'},{n:'Jalones al pecho',s:'4×10–12'},
@@ -2218,28 +2250,16 @@ const FD={
 };
 
 /* ── Bloques B: mismos grupos musculares, ejercicios alternativos ── */
+/* FD_B — A/B rotation disabled for Phase 2 (each day has its own fixed session)
+   Kept for legacy compatibility and future use */
 const FD_B={
-  'Tren superior':{kcal:'~450 kcal',dur:'60–75 min',variant:'B',ex:[
-    {n:'Press de mancuernas inclinado',s:'4×10–12'},
-    {n:'Dominadas (pull-ups)',s:'4×8–10'},
-    {n:'Press Arnold',s:'4×10–12'},
-    {n:'Jalones con agarre neutro',s:'4×10–12'},
-    {n:'Curl martillo',s:'3×12'},
-    {n:'Press francés (skull crusher)',s:'3×12'}]},
-  'Tren inferior':{kcal:'~540 kcal',dur:'60–75 min',variant:'B',ex:[
-    {n:'Sentadilla búlgara (split squat)',s:'4×10 c/lado'},
-    {n:'Peso muerto convencional',s:'4×8–10'},
-    {n:'Hack squat en máquina',s:'4×12'},
-    {n:'Curl femoral tumbado',s:'3×12'},
-    {n:'Zancadas (lunges)',s:'3×12 c/lado'},
-    {n:'Gemelos sentado (máquina)',s:'4×15'}]},
-  'Full body':{kcal:'~460 kcal',dur:'50–60 min',variant:'B',ex:[
-    {n:'Sentadilla frontal',s:'3×12–15'},
-    {n:'Hip thrust con mancuerna',s:'3×12–15'},
-    {n:'Remo Pendlay',s:'3×12–15'},
-    {n:'Press de mancuernas plano',s:'3×12–15'},
-    {n:'Reverse fly con mancuernas',s:'3×15'},
-    {n:'Plancha lateral',s:'3×30 seg c/lado'}]},
+  'Push — Empuje':FD['Push — Empuje'],
+  'Pull — Tirón':FD['Pull — Tirón'],
+  'Legs — Piernas':FD['Legs — Piernas'],
+  'Brazos + Movilidad':FD['Brazos + Movilidad'],
+  'Tren superior':FD['Tren superior'],
+  'Tren inferior':FD['Tren inferior'],
+  'Full body':FD['Full body'],
 };
 
 /* ── Counter: tracks how many times each sub has been done ──
@@ -3738,6 +3758,8 @@ function openModal(key,i,date){
     {t:'custom',ico:'✏️',lbl:'Entreno libre',cls:'sl'},
     {t:'descanso',ico:'🌿',lbl:'Descanso',cls:'sd'},
   ];
+  // PPL subs for fuerza
+  const fuerza_subs = ['Push — Empuje','Pull — Tirón','Legs — Piernas','Brazos + Movilidad','Tren superior','Tren inferior','Full body'];
   grid.innerHTML=opts.map(o=>`<button class="topt" id="op-${o.t}" onclick="pickType('${o.t}')"><span class="tico">${o.ico}</span>${o.lbl}</button>`).join('');
   ['sup','inf','fb'].forEach(s=>document.getElementById('sub-'+s).classList.remove('chosen'));
   document.getElementById('btn-apply').classList.remove('ready');
@@ -5077,6 +5099,59 @@ const EX_DB={
     {n:'Dead bug',d:'Más dinámico, estabilización lumbo-pélvica.'},
     {n:'Plancha con elevación de brazo',d:'Mayor inestabilidad.'},
   ]},
+
+  /* ── PPL Phase 2 exercises ── */
+  'Press banca plano':{muscle:'Pecho, tríceps, deltoides',icon:'💪',alts:[
+    {n:'Press de mancuernas inclinado',d:'Mayor rango de movimiento.'},
+    {n:'Press inclinado',d:'Énfasis en pecho superior.'},
+    {n:'Fondos en paralelas (dips)',d:'Peso corporal, muy completo.'},
+    {n:'Crossover en polea',d:'Aislamiento pectoral con tensión constante.'}]},
+  'Press militar con barra':{muscle:'Deltoides, tríceps, trapecio',icon:'💪',alts:[
+    {n:'Press Arnold',d:'Rotación que activa más el deltoides.'},
+    {n:'Press de hombros con mancuernas',d:'Mayor rango y estabilización.'},
+    {n:'Elevaciones frontales',d:'Aislamiento deltoides anterior.'},
+    {n:'Press en máquina de hombros',d:'Guiado, más seguro con alta carga.'}]},
+  'Elevaciones laterales':{muscle:'Deltoides lateral',icon:'💪',alts:[
+    {n:'Elevaciones laterales en polea baja',d:'Tensión constante durante todo el rango.'},
+    {n:'Elevaciones laterales sentado',d:'Elimina el impulso con las piernas.'},
+    {n:'Press Arnold',d:'Compuesto que incluye deltoides lateral.'}]},
+  'Remo mancuerna un brazo':{muscle:'Dorsal, romboides, bíceps',icon:'💪',alts:[
+    {n:'Remo con barra',d:'Bilateral, mayor carga posible.'},
+    {n:'Remo T-bar',d:'Con apoyo de pecho, muy estable.'},
+    {n:'Remo en polea baja',d:'Tensión constante, buen estiramiento.'},
+    {n:'Remo Pendlay',d:'Explosivo, buen transferencia de fuerza.'}]},
+  'Curl concentrado':{muscle:'Bíceps (aislamiento máximo)',icon:'💪',alts:[
+    {n:'Curl de bíceps',d:'Bilateral, más carga total.'},
+    {n:'Curl inclinado con mancuernas',d:'Mayor estiramiento del bíceps.'},
+    {n:'Curl en polea baja',d:'Tensión constante en todo el rango.'}]},
+  'Curl inclinado con mancuernas':{muscle:'Bíceps (porción larga)',icon:'💪',alts:[
+    {n:'Curl concentrado',d:'Máximo aislamiento sentado.'},
+    {n:'Curl de bíceps',d:'De pie, más carga bilateral.'},
+    {n:'Curl martillo',d:'Activa más el braquiorradial.'}]},
+  'Extensión tríceps sobre cabeza':{muscle:'Tríceps (porción larga)',icon:'💪',alts:[
+    {n:'Press francés (skull crusher)',d:'Tumbado, mayor carga posible.'},
+    {n:'Tríceps en polea',d:'Tensión constante, sin compresión cervical.'},
+    {n:'Press cerrado con barra',d:'Compuesto, más carga total.'}]},
+  'Curl de muñeca con barra':{muscle:'Flexores del antebrazo',icon:'💪',alts:[
+    {n:'Curl de muñeca con mancuerna',d:'Unilateral, mayor control.'},
+    {n:'Curl inverso de muñeca',d:'Trabaja extensores del antebrazo.'},
+    {n:'Farmer carry',d:'Fuerza de agarre funcional.'}]},
+  'Rotaciones de hombro con banda':{muscle:'Manguito rotador',icon:'🤸',alts:[
+    {n:'Rotación externa con polea',d:'Mayor control de la carga.'},
+    {n:'Face pull',d:'Trabaja manguito y deltoides posterior.'},
+    {n:'Rotación interna con banda',d:'Complemento equilibrado.'}]},
+  'Apertura torácica en banco':{muscle:'Movilidad columna torácica',icon:'🤸',alts:[
+    {n:'Gato-vaca (cat-cow)',d:'Movilidad global de columna.'},
+    {n:'Rotación torácica en suelo',d:'Sin material, muy efectivo.'},
+    {n:'Foam roller columna torácica',d:'Liberación miofascial.'}]},
+  'Hip 90/90 rotación de cadera':{muscle:'Movilidad cadera (rotadores)',icon:'🤸',alts:[
+    {n:'Paloma (pigeon pose)',d:'Estiramiento profundo del piriforme.'},
+    {n:'Rotación de cadera en decúbito',d:'Sin carga, muy accesible.'},
+    {n:'Sentadilla asiática (deep squat)',d:'Movilidad global de cadera.'}]},
+  'Estiramiento pectoral en marco':{muscle:'Pecho, deltoides anterior',icon:'🤸',alts:[
+    {n:'Apertura de pecho con banda',d:'Sin marco de puerta necesario.'},
+    {n:'Estiramiento pectoral en suelo',d:'Tumbado con brazos abiertos.'},
+    {n:'Rotaciones torácicas',d:'Movilidad de columna torácica.'}]},
 };
 
 /* ── EJERCICIOS PAGE TABS ── */
@@ -5113,7 +5188,7 @@ function getEffectiveFD(sub, variant){
 function renderRutinas(){
   const body=document.getElementById('rutinas-body');
   if(!body)return;
-  const subs=['Tren superior','Tren inferior','Full body'];
+  const subs=['Push — Empuje','Pull — Tirón','Legs — Piernas','Brazos + Movilidad','Tren superior','Tren inferior','Full body'];
   body.innerHTML=subs.map(sub=>{
     return `<div style="margin-bottom:20px;touch-action:pan-y;">
       <div style="font-size:13px;font-weight:800;color:var(--ink);letter-spacing:-.2px;margin-bottom:10px;
