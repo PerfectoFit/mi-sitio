@@ -1883,9 +1883,10 @@ body {
       <button class="back-btn" onclick="backStep()">← Volver</button>
       <div class="modal-step-lbl">Tipo de fuerza</div>
       <div class="sub-opts">
-        <button class="sopt" id="sub-sup" onclick="pickSub('Tren superior')"><div class="sopt-name">💪 Tren superior</div><div class="sopt-desc">Press banca · Remo · Press militar · Jalones · Bíceps · Tríceps</div></button>
-        <button class="sopt" id="sub-inf" onclick="pickSub('Tren inferior')"><div class="sopt-name">🦵 Tren inferior</div><div class="sopt-desc">Sentadilla · Peso muerto · Prensa · Curl femoral · Gemelos</div></button>
-        <button class="sopt" id="sub-fb" onclick="pickSub('Full body')"><div class="sopt-name">🔁 Full body</div><div class="sopt-desc">Sentadilla · Hip thrust · Remo polea · Press inclinado · Plancha</div></button>
+        <button class="sopt" id="sub-push" onclick="pickSub('Push — Empuje')"><div class="sopt-name">💪 Push — Empuje</div><div class="sopt-desc">Press banca · Press inclinado · Press militar · Elevaciones · Tríceps</div></button>
+        <button class="sopt" id="sub-pull" onclick="pickSub('Pull — Tirón')"><div class="sopt-name">🔙 Pull — Tirón</div><div class="sopt-desc">Jalones · Remo barra · Remo mancuerna · Curl bíceps · Curl martillo</div></button>
+        <button class="sopt" id="sub-legs" onclick="pickSub('Legs — Piernas')"><div class="sopt-name">🦵 Legs — Piernas</div><div class="sopt-desc">Sentadilla · Prensa · Peso muerto · Extensiones · Curl femoral</div></button>
+        <button class="sopt" id="sub-brazos" onclick="pickSub('Brazos + Movilidad')"><div class="sopt-name">🤸 Brazos + Movilidad</div><div class="sopt-desc">Curl · Tríceps · Muñeca · Hombro · Cadera · Movilidad torácica</div></button>
       </div>
     </div>
     <div class="modal-acts">
@@ -2334,26 +2335,25 @@ function buildDefaultPlan(profile){
   const hasFuerza=trains.includes('fuerza');
   const padelDays=profile.padelDays||3;
   const fuerzaDays=profile.fuerzaDays||3;
-  const fuerzaRots=['Tren superior','Tren inferior','Full body'];
+  // PPL Phase 2: fixed day → session mapping
+  // Mon=Push, Tue=Pull, Wed=rest/padel, Thu=Legs, Fri=Brazos+Movilidad, Sat=padel, Sun=rest
+  const pplMap={
+    0:{type:'fuerza',sub:'Push — Empuje',time:'18–19 h'},
+    1:{type:'fuerza',sub:'Pull — Tirón',time:'18–19 h'},
+    2:{type:'descanso',sub:'Descanso activo',time:''},
+    3:{type:'fuerza',sub:'Legs — Piernas',time:'18–19 h'},
+    4:{type:'fuerza',sub:'Brazos + Movilidad',time:'18–19 h'},
+    5:{type:'padel',sub:'Partido 90 min',time:'mañana'},
+    6:{type:'descanso',sub:'Descanso activo',time:''},
+  };
   let pi=0,fi=0;
-  // Distribute padel on weekdays+weekend
+  // Apply PPL plan as default (user can override each day)
+  for(let d=0;d<7;d++){
+    plan[d]={...pplMap[d]};
+  }
+  // If user has padel days configured differently, honour that
   const padelSlots=[1,3,5,6,0,2,4];
   const fuerzaSlots=[0,2,4,1,3,6,5];
-  if(hasPadel){
-    for(let i=0;i<padelDays&&i<padelSlots.length;i++){
-      const d=padelSlots[i];
-      plan[d]={type:'padel',sub:'Partido 90 min',time:d>=5?'mañana':'18–19 h'};
-    }
-  }
-  if(hasFuerza){
-    const fuSlots=hasPadel?[0,2,4,6,1,3,5]:[0,1,2,3,4,5,6];
-    for(let i=0;i<fuerzaDays&&i<fuSlots.length;i++){
-      const d=fuSlots[i];
-      if(plan[d].type==='descanso'){
-        plan[d]={type:'fuerza',sub:fuerzaRots[i%3],time:d>=5?'mañana':'18–19 h'};
-      }
-    }
-  }
   return plan;
 }
 
@@ -3794,7 +3794,7 @@ function backStep(){
 function pickSub(s){
   pSub=s;
   ['sup','inf','fb'].forEach(x=>document.getElementById('sub-'+x).classList.remove('chosen'));
-  const m={'Tren superior':'sub-sup','Tren inferior':'sub-inf','Full body':'sub-fb'};
+  const m={'Push — Empuje':'sub-push','Pull — Tirón':'sub-pull','Legs — Piernas':'sub-legs','Brazos + Movilidad':'sub-brazos','Tren superior':'sub-sup','Tren inferior':'sub-inf','Full body':'sub-fb'};
   document.getElementById(m[s]).classList.add('chosen');
   document.getElementById('btn-apply').classList.add('ready');
 }
