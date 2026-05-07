@@ -1370,11 +1370,7 @@ function launchApp(){
   startApp(profile);
 }
 
-function resetProfile(){
-  if(!confirm('¿Quieres reconfigurar tu perfil? Se borrarán tus datos de la app.')) return;
-  localStorage.removeItem('fp_profile');
-  location.reload();
-}
+
 
 /* ══════════════════════════════════
    APP STATE & DATA
@@ -1455,14 +1451,6 @@ try{wkData=JSON.parse(localStorage.getItem('fp_wkd')||'{}');}catch(e){}
   if(ch)localStorage.setItem('fp_wkd',JSON.stringify(wkData));
 })();
 
-function persist(){
-  localStorage.setItem('fp_checks',JSON.stringify(checks));
-  localStorage.setItem('fp_wlog',JSON.stringify(wlog));
-  localStorage.setItem('fp_wkd',JSON.stringify(wkData));
-  localStorage.setItem('fp_exw',JSON.stringify(exWeights));
-  localStorage.setItem('fp_exc',JSON.stringify(exChecks));
-  localStorage.setItem('fp_cc',JSON.stringify(cardioChecks));
-}
 
 const DAYS=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const DS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
@@ -3029,18 +3017,9 @@ function startApp(profile){
   document.getElementById('onboarding').style.display='none';
   document.getElementById('app').style.display='block';
   document.getElementById('user-name-chip').textContent=profile.name;
-  // Track login event
   trackEvent('app_open', {platform: window.innerWidth>860?'desktop':'mobile'});
   renderTraining();
   renderEjercicios();
-}
-
-// goPage handles admin inline above
-
-// Sync profile on launch
-const _origStartApp = startApp;
-function startApp(profile){
-  _origStartApp(profile);
   if(profile && profile.name) syncProfileToCloud(profile).catch(()=>{});
 }
 
