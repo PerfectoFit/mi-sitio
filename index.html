@@ -915,6 +915,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   </div>
 
   <div class="page" id="page-diet">
+    <!-- Diet / Suplementos subtabs -->
+    <div id="diet-tab-bar" style="display:flex;background:var(--surf2);border-radius:11px;padding:3px;gap:2px;margin-bottom:14px;">
+      <button id="diet-tab-dieta" onclick="dietTab('dieta')"
+        style="flex:1;padding:7px;border-radius:9px;border:none;background:var(--surf);color:var(--ink);font-size:12px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;box-shadow:var(--sh);">
+        🥗 Dieta
+      </button>
+      <button id="diet-tab-supl" onclick="dietTab('supl')"
+        style="flex:1;padding:7px;border-radius:9px;border:none;background:transparent;color:var(--ink3);font-size:12px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;">
+        💊 Suplementos
+      </button>
+    </div>
+    <div id="diet-pane-dieta">
     <div class="sec-h">
       <div class="sec-title">Dieta</div>
       <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -939,7 +951,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     </div>
   </div>
 
-  <div class="page" id="page-supl">
+    </div><!-- end diet-pane-dieta -->
+    <!-- Suplementos pane -->
+    <div id="diet-pane-supl" style="display:none;">
+  <div id="page-supl-content">
     <div class="sec-h"><div class="sec-title">Suplementación</div></div>
     <div style="display:flex;background:var(--surf2);border-radius:11px;padding:3px;gap:2px;margin-bottom:14px;">
       <button id="spl-tab-plan" onclick="suplTab('plan')" style="flex:1;padding:7px;border-radius:9px;border:none;background:var(--surf);color:var(--ink);font-size:12px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;box-shadow:var(--sh);">Plan diario</button>
@@ -971,6 +986,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     </div>
   </div>
 
+    </div><!-- end diet-pane-supl -->
   <div class="page" id="page-results">
     <div class="sec-h">
       <div class="sec-title">Resultados</div>
@@ -1044,7 +1060,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     <button class="bn-btn active" id="bn-training" onclick="goPage('training',this)"><div class="bn-icon">🏋️</div><div class="bn-label">Entreno</div></button>
     <button class="bn-btn" id="bn-ejercicios" onclick="goPage('ejercicios',this)"><div class="bn-icon">💪</div><div class="bn-label">Ejercicios</div></button>
     <button class="bn-btn" id="bn-diet" onclick="goPage('diet',this)"><div class="bn-icon">🥗</div><div class="bn-label">Dieta</div></button>
-    <button class="bn-btn" id="bn-supl" onclick="goPage('supl',this)"><div class="bn-icon">💊</div><div class="bn-label">Suplementos</div></button>
     <button class="bn-btn" id="bn-results" onclick="goPage('results',this)"><div class="bn-icon">📊</div><div class="bn-label">Resultados</div></button>
   </div>
 </div>
@@ -1961,13 +1976,28 @@ function getDetailInsights(sub,dateKey){
 
 /* ─── NAV ─── */
 function goPage(id,btn){
+  // 'home' maps to page-inicio
+  const pageId = id==='home' ? 'inicio' : id;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.bn-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  btn.classList.add('active');
-  if(id==='diet')renderDiet();
-  if(id==='ejercicios')renderEjercicios();
-  if(id==='results'){updateProj();renderWlog();renderChart();renderMS();renderAdaptivePanel();}
+  const pageEl = document.getElementById('page-'+pageId);
+  if(!pageEl){ console.warn('Page not found: page-'+pageId); return; }
+  pageEl.classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(pageId==='training')renderTraining();
+  if(pageId==='inicio')renderHome();
+  if(pageId==='diet')renderDiet();
+  if(pageId==='ejercicios')renderEjercicios();
+  if(pageId==='results'){updateProj();renderWlog();renderChart();renderMS();if(typeof renderAdaptivePanel==='function')renderAdaptivePanel();}
+  if(pageId==='supl'){renderSuplPage();if(typeof suplTab==='function')suplTab('plan');}
+  if(id==='admin'){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.bn-btn').forEach(b=>b.classList.remove('active'));
+    const adminEl=document.getElementById('page-admin');
+    if(adminEl)adminEl.classList.add('active');
+    if(btn)btn.classList.add('active');
+    if(typeof renderAdminPanel==='function')renderAdminPanel();
+  }
 }
 
 /* ════ TRAINING ════ */
@@ -3005,25 +3035,13 @@ function startApp(profile){
   renderEjercicios();
 }
 
-// Override goPage to handle admin
-const _origGoPage = goPage;
-function goPage(id, btn){
-  if(id==='admin'){ 
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.querySelectorAll('.bn-btn').forEach(b=>b.classList.remove('active'));
-    document.getElementById('page-admin').classList.add('active');
-    if(btn) btn.classList.add('active');
-    renderAdminPanel();
-    return;
-  }
-  _origGoPage(id, btn);
-}
+// goPage handles admin inline above
 
-// Override launchApp to also sync profile to Supabase
-const _origLaunchApp = launchApp;
-async function launchApp(){
-  _origLaunchApp();
-  if(P && P.name) await syncProfileToCloud(P);
+// Sync profile on launch
+const _origStartApp = startApp;
+function startApp(profile){
+  _origStartApp(profile);
+  if(profile && profile.name) syncProfileToCloud(profile).catch(()=>{});
 }
 
 // Override resetProfile to sign out instead of just reload
@@ -3319,6 +3337,21 @@ function removeSupplement(idx){
   renderSuplMine();
 }
 
+
+function dietTab(tab){
+  ['dieta','supl'].forEach(t=>{
+    const pane=document.getElementById('diet-pane-'+t);
+    const btn=document.getElementById('diet-tab-'+t);
+    if(!pane||!btn)return;
+    const on=t===tab;
+    pane.style.display=on?'block':'none';
+    btn.style.background=on?'var(--surf)':'transparent';
+    btn.style.color=on?'var(--ink)':'var(--ink3)';
+    btn.style.boxShadow=on?'var(--sh)':'none';
+  });
+  if(tab==='supl'){renderSuplPage();suplTab('plan');}
+  if(tab==='dieta'){renderDiet();}
+}
 </script>
 </body>
 </html>
