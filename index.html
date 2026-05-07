@@ -863,6 +863,36 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     </div>
   </div>
 
+  <div class="page" id="page-inicio">
+    <div class="sec-h" style="padding-bottom:4px;">
+      <div class="sec-title">Inicio</div>
+    </div>
+    <div id="home-score-card" style="background:var(--surf);border:0.5px solid var(--brd);border-radius:var(--r);padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;box-shadow:var(--sh2);">
+      <div style="position:relative;width:80px;height:80px;flex-shrink:0;">
+        <svg width="80" height="80" viewBox="0 0 80 80" style="transform:rotate(-90deg);">
+          <circle cx="40" cy="40" r="33" fill="none" stroke="rgba(100,80,50,.1)" stroke-width="6"/>
+          <circle id="home-score-ring" cx="40" cy="40" r="33" fill="none" stroke="var(--coral)" stroke-width="6"
+            stroke-dasharray="207" stroke-dashoffset="207" stroke-linecap="round"/>
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <div id="home-score-big" style="font-size:26px;font-weight:900;color:var(--ink);letter-spacing:-1px;line-height:1;">—</div>
+          <div style="font-size:9px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;">score</div>
+        </div>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;">Score del día</div>
+        <div id="home-score-msg" style="font-size:13px;font-weight:500;color:var(--ink);line-height:1.4;margin-bottom:8px;">Cargando...</div>
+        <div id="home-score-tags" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+      </div>
+    </div>
+    <div id="home-mini-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;"></div>
+    <div style="background:var(--surf);border:0.5px solid var(--brd);border-radius:var(--r);padding:14px;margin-bottom:12px;box-shadow:var(--sh);">
+      <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">Progreso del día</div>
+      <div id="home-prog-grid"></div>
+    </div>
+    <div id="home-next-card" style="cursor:pointer;margin-bottom:12px;"></div>
+  </div>
+
   <div class="page active" id="page-training">
     <div class="sec-h">
       <div class="sec-title">Entrenamiento</div>
@@ -905,6 +935,38 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           <div class="avoid-row"><div class="avoid-pip"></div>Salsas comerciales</div>
           <div class="avoid-row"><div class="avoid-pip"></div>Ultraprocesados</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-supl">
+    <div class="sec-h"><div class="sec-title">Suplementación</div></div>
+    <div style="display:flex;background:var(--surf2);border-radius:11px;padding:3px;gap:2px;margin-bottom:14px;">
+      <button id="spl-tab-plan" onclick="suplTab('plan')" style="flex:1;padding:7px;border-radius:9px;border:none;background:var(--surf);color:var(--ink);font-size:12px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;box-shadow:var(--sh);">Plan diario</button>
+      <button id="spl-tab-mine" onclick="suplTab('mine')" style="flex:1;padding:7px;border-radius:9px;border:none;background:transparent;color:var(--ink3);font-size:12px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;">Mis suplementos</button>
+      <button id="spl-tab-sug" onclick="suplTab('sug')" style="flex:1;padding:7px;border-radius:9px;border:none;background:transparent;color:var(--ink3);font-size:12px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;">Sugerencias</button>
+    </div>
+    <div id="spl-pane-plan">
+      <div style="background:var(--surf);border:0.5px solid var(--brd);border-radius:var(--r);padding:14px;margin-bottom:12px;box-shadow:var(--sh);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:12px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;">Hoy</div>
+          <div id="supl-pct" style="font-size:12px;font-weight:800;color:var(--moss);">0%</div>
+        </div>
+        <div style="height:4px;background:rgba(100,80,50,.08);border-radius:2px;overflow:hidden;margin-bottom:6px;">
+          <div id="supl-bar" style="height:4px;background:var(--moss);border-radius:2px;width:0%;transition:width .5s;"></div>
+        </div>
+        <div id="supl-bar-lbl" style="font-size:10px;color:var(--ink3);">0 de 0 tomas completadas</div>
+      </div>
+      <div id="spl-plan-list" style="background:var(--surf);border:0.5px solid var(--brd);border-radius:var(--r);padding:4px 14px;box-shadow:var(--sh);"></div>
+    </div>
+    <div id="spl-pane-mine" style="display:none;">
+      <div id="spl-mine-list" style="background:var(--surf);border:0.5px solid var(--brd);border-radius:var(--r);padding:4px 14px;margin-bottom:10px;box-shadow:var(--sh);"></div>
+      <button onclick="addMySupplement()" style="width:100%;padding:10px;border-radius:var(--r);border:1px dashed var(--brd2);background:transparent;font-size:12px;font-weight:600;color:var(--ink3);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">＋ Añadir suplemento</button>
+    </div>
+    <div id="spl-pane-sug" style="display:none;">
+      <div style="background:var(--surf);border:0.5px solid var(--brd);border-radius:var(--r);padding:14px;box-shadow:var(--sh);">
+        <div style="font-size:12px;color:var(--ink3);line-height:1.6;">Basado en tu objetivo de ganar fuerza y masa muscular:</div>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;" id="spl-suggestions"></div>
       </div>
     </div>
   </div>
@@ -978,9 +1040,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   </div>
 
   <div class="bottom-nav">
+    <button class="bn-btn" id="bn-home" onclick="goPage('inicio',this)"><div class="bn-icon">🏠</div><div class="bn-label">Inicio</div></button>
     <button class="bn-btn active" id="bn-training" onclick="goPage('training',this)"><div class="bn-icon">🏋️</div><div class="bn-label">Entreno</div></button>
     <button class="bn-btn" id="bn-ejercicios" onclick="goPage('ejercicios',this)"><div class="bn-icon">💪</div><div class="bn-label">Ejercicios</div></button>
     <button class="bn-btn" id="bn-diet" onclick="goPage('diet',this)"><div class="bn-icon">🥗</div><div class="bn-label">Dieta</div></button>
+    <button class="bn-btn" id="bn-supl" onclick="goPage('supl',this)"><div class="bn-icon">💊</div><div class="bn-label">Suplementos</div></button>
     <button class="bn-btn" id="bn-results" onclick="goPage('results',this)"><div class="bn-icon">📊</div><div class="bn-label">Resultados</div></button>
   </div>
 </div>
@@ -1306,26 +1370,48 @@ let pType=null,pSub=null,mCtx=null;
 let checks=JSON.parse(localStorage.getItem('fp_checks')||'{}');
 let wlog=JSON.parse(localStorage.getItem('fp_wlog')||'[]');
 let exWeights=JSON.parse(localStorage.getItem('fp_exw')||'{}');
-/* ── PPL weight migration ── */
+/* ── PPL weight migration — covers all naming variants ── */
 (function(){
   const m={
     'Tren_superior_Press_banca':              'Pecho_y_Tr_ceps_Press_banca_plano',
     'Tren_superior_Press_banca_inclinado':    'Pecho_y_Tr_ceps_Press_de_mancuernas_inclinado',
-    'Tren_superior_Elevaciones_laterales':    'Brazos__Hombro_y_Movilidad_Elevaciones_laterales',
     'Tren_superior_Tr_ceps_en_polea':         'Pecho_y_Tr_ceps_Tr_ceps_en_polea',
     'Tren_superior_Press_franc_s__skull_crusher_':'Pecho_y_Tr_ceps_Press_franc_s__skull_crusher_',
+    'Tren_superior_Elevaciones_laterales':    'Brazos__Hombro_y_Movilidad_Elevaciones_laterales',
+    'Tren_superior_Press_militar':            'Brazos__Hombro_y_Movilidad_Press_Arnold',
     'Tren_superior_Jalones_al_pecho':         'Espalda_y_B_ceps_Jalones_al_pecho',
     'Tren_superior_Remo_con_barra':           'Espalda_y_B_ceps_Remo_con_barra',
     'Tren_superior_Jalones_con_agarre_neutro':'Espalda_y_B_ceps_Jalones_con_agarre_neutro',
     'Tren_superior_Curl_de_b_ceps':           'Espalda_y_B_ceps_Curl_de_b_ceps',
     'Tren_superior_Curl_martillo':            'Espalda_y_B_ceps_Curl_martillo',
-    'Tren_superior_Press_militar':            'Brazos__Hombro_y_Movilidad_Press_Arnold',
     'Tren_inferior_Sentadilla_goblet':        'Pierna_Sentadilla_con_barra',
+    'Tren_inferior_Sentadilla__cualquier_variante_':'Pierna_Sentadilla_con_barra',
     'Tren_inferior_Prensa_de_piernas':        'Pierna_Prensa_de_piernas',
     'Tren_inferior_Peso_muerto_rumano':       'Pierna_Peso_muerto_rumano',
     'Tren_inferior_Extensiones_cu_driceps':   'Pierna_Extensiones_cu_driceps',
+    'Tren_inferior_Extensiones_de_cu_driceps':'Pierna_Extensiones_cu_driceps',
     'Tren_inferior_Curl_femoral':             'Pierna_Curl_femoral',
     'Tren_inferior_Gemelos_de_pie':           'Pierna_Gemelos_de_pie',
+    'custom_Abductor':                        'Pierna_Abductor',
+    'custom_Aductor':                         'Pierna_Aductor',
+    'custom_Aperturas_pecho_plano':           'Pecho_y_Tr_ceps_Aperturas_pecho_plano',
+    'custom_Aperturas_plano':                 'Pecho_y_Tr_ceps_Aperturas_plano',
+    'Pull___Tir_n_Jalones_al_pecho':          'Espalda_y_B_ceps_Jalones_al_pecho',
+    'Pull___Tir_n_Remo_con_barra':            'Espalda_y_B_ceps_Remo_con_barra',
+    'Pull___Tir_n_Remo_mancuerna_un_brazo':   'Espalda_y_B_ceps_Remo_mancuerna_un_brazo',
+    'Pull___Tir_n_Jalones_con_agarre_neutro': 'Espalda_y_B_ceps_Jalones_con_agarre_neutro',
+    'Pull___Tir_n_Curl_de_b_ceps':            'Espalda_y_B_ceps_Curl_de_b_ceps',
+    'Pull___Tir_n_Curl_martillo':             'Espalda_y_B_ceps_Curl_martillo',
+    'Push___Empuje_Press_banca_plano':        'Pecho_y_Tr_ceps_Press_banca_plano',
+    'Push___Empuje_Press_de_mancuernas_inclinado':'Pecho_y_Tr_ceps_Press_de_mancuernas_inclinado',
+    'Push___Empuje_Tr_ceps_en_polea':         'Pecho_y_Tr_ceps_Tr_ceps_en_polea',
+    'Push___Empuje_Elevaciones_laterales':    'Brazos__Hombro_y_Movilidad_Elevaciones_laterales',
+    'Legs___Piernas_Sentadilla_con_barra':    'Pierna_Sentadilla_con_barra',
+    'Legs___Piernas_Prensa_de_piernas':       'Pierna_Prensa_de_piernas',
+    'Legs___Piernas_Peso_muerto_rumano':      'Pierna_Peso_muerto_rumano',
+    'Legs___Piernas_Extensiones_cu_driceps':  'Pierna_Extensiones_cu_driceps',
+    'Legs___Piernas_Curl_femoral':            'Pierna_Curl_femoral',
+    'Legs___Piernas_Gemelos_de_pie':          'Pierna_Gemelos_de_pie',
   };
   const ew=exWeights;let ch=false;
   Object.entries(m).forEach(([o,n])=>{if(ew[o]&&!ew[n]){ew[n]=ew[o];ch=true;}});
@@ -1336,6 +1422,23 @@ let exChecks=JSON.parse(localStorage.getItem('fp_exc')||'{}');
 let cardioChecks=JSON.parse(localStorage.getItem('fp_cc')||'{}');
 let chartI=null;
 try{wkData=JSON.parse(localStorage.getItem('fp_wkd')||'{}');}catch(e){}
+
+/* ── Migrate old sub names in wkData ── */
+(function(){
+  const sm={
+    'Tren superior':'Pecho y Tríceps','Tren inferior':'Pierna',
+    'Full body':'Pecho y Tríceps','Push — Empuje':'Pecho y Tríceps',
+    'Pull — Tirón':'Espalda y Bíceps','Legs — Piernas':'Pierna',
+    'Brazos + Movilidad':'Brazos, Hombro y Movilidad',
+  };
+  let ch=false;
+  Object.keys(wkData).forEach(k=>{
+    const v=wkData[k];
+    const acts=Array.isArray(v)?v:[v];
+    acts.forEach(a=>{if(a&&a.sub&&sm[a.sub]){a.sub=sm[a.sub];ch=true;}});
+  });
+  if(ch)localStorage.setItem('fp_wkd',JSON.stringify(wkData));
+})();
 
 function persist(){
   localStorage.setItem('fp_checks',JSON.stringify(checks));
@@ -2963,6 +3066,259 @@ function resetProfile(){
     }
   });
 })();
+
+
+/* ══════════════════════════════════════════════
+   INICIO PAGE — renderHome
+══════════════════════════════════════════════ */
+function renderHome(){
+  const today = fmt(new Date());
+  const days = weekDays(wkOff);
+  const todayIdx = days.findIndex(d => fmt(d) === today);
+
+  // ── Score calculation ──
+  let score = 0, tags = [], msg = '';
+  // Nutrition score (0-40)
+  const dietEl = document.getElementById('diet-kcal-consumed');
+  const kcalConsumed = dietEl ? parseInt(dietEl.textContent)||0 : 0;
+  const kcalTarget = parseInt((P||{}).kcal)||2500;
+  const nutritionPct = kcalTarget > 0 ? Math.min(kcalConsumed/kcalTarget, 1) : 0;
+  const nutritionScore = Math.round(nutritionPct * 40);
+  score += nutritionScore;
+  if(nutritionPct >= 0.8) tags.push({l:'Nutrición ✓', c:'#2e7d32', bg:'#e6f4ea'});
+  else tags.push({l:'Nutrición', c:'#e65100', bg:'#fff3e0'});
+
+  // Training score (0-40)
+  const todayActs = getActivities ? getActivities(today, todayIdx) : [];
+  const fuerzaActs = todayActs.filter(a => a.type === 'fuerza');
+  const exChecksToday = exChecks[today] || {};
+  let trainScore = 0;
+  if(fuerzaActs.length > 0){
+    const fd = getFDForDate ? getFDForDate(fuerzaActs[0].sub, today) : null;
+    const total = fd ? fd.ex.length : 6;
+    const done = Object.values(exChecksToday).filter(Boolean).length;
+    trainScore = Math.round((done/total)*40);
+    score += trainScore;
+    if(done >= total) tags.push({l:'Entreno ✓', c:'#1565c0', bg:'#e3edf9'});
+    else tags.push({l:'Entreno', c:'#1565c0', bg:'#e3edf9'});
+  } else {
+    score += 20; // rest day bonus
+    tags.push({l:'Descanso', c:'#4a7c59', bg:'#e6f2ea'});
+  }
+
+  // Supplements score (0-20)
+  const suplDone = Object.values(suplChecks && suplChecks[today] || {}).filter(Boolean).length;
+  const suplTotal = (suplMine||[]).length || 4;
+  const suplScore = Math.round((Math.min(suplDone,suplTotal)/suplTotal)*20);
+  score += suplScore;
+  if(suplDone >= suplTotal) tags.push({l:'Suplem. ✓', c:'#2e7d32', bg:'#e6f2ea'});
+
+  score = Math.min(score, 100);
+
+  // Message
+  if(score >= 85) msg = '¡Día excelente! Sigue así 💪';
+  else if(score >= 60) msg = 'Buen ritmo. ' + (nutritionPct < 0.8 ? 'Faltan calorías.' : fuerzaActs.length && trainScore < 30 ? 'Completa el entreno.' : 'Sigue así.');
+  else if(score >= 30) msg = 'Día regular. Aprovecha el resto del día.';
+  else msg = 'Día comienza ahora. ¡A por ello!';
+
+  // ── Render ring ──
+  const ring = document.getElementById('home-score-ring');
+  if(ring){ const offset = 207 - (207 * score / 100); ring.style.strokeDashoffset = offset; ring.style.transition = 'stroke-dashoffset 1s ease'; }
+  const bigEl = document.getElementById('home-score-big');
+  if(bigEl) bigEl.textContent = score;
+  const msgEl = document.getElementById('home-score-msg');
+  if(msgEl) msgEl.textContent = msg;
+  const tagsEl = document.getElementById('home-score-tags');
+  if(tagsEl) tagsEl.innerHTML = tags.map(t=>`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:${t.bg};color:${t.c};">${t.l}</span>`).join('');
+
+  // ── Mini stats ──
+  const lastW = wlog && wlog.length ? wlog[wlog.length-1].kg : '—';
+  const miniGrid = document.getElementById('home-mini-grid');
+  if(miniGrid) miniGrid.innerHTML = [
+    {ico:'🔥', val: kcalConsumed||'0', lbl:'kcal hoy', c:'var(--coral)'},
+    {ico:'⚖️', val: lastW,              lbl:'kg peso',  c:'var(--fuerza)'},
+    {ico:'🏆', val: Object.keys(exWeights||{}).length, lbl:'ejercicios', c:'var(--amber)'},
+  ].map(m=>`<div style="background:var(--surf);border:0.5px solid var(--brd);border-radius:14px;padding:10px 8px;text-align:center;box-shadow:var(--sh);">
+    <div style="font-size:16px;margin-bottom:4px;">${m.ico}</div>
+    <div style="font-size:17px;font-weight:900;color:${m.c};letter-spacing:-.4px;line-height:1;">${m.val}</div>
+    <div style="font-size:8px;font-weight:600;color:var(--ink3);text-transform:uppercase;margin-top:2px;">${m.lbl}</div>
+  </div>`).join('');
+
+  // ── Progress bars ──
+  const progGrid = document.getElementById('home-prog-grid');
+  if(progGrid){
+    const progs = [
+      {ico:'🥗',name:'Nutrición', pct:Math.round(nutritionPct*100), detail:`${kcalConsumed} / ${kcalTarget} kcal`, col:'var(--coral)', page:'diet'},
+      {ico:'🏋️',name:'Entrenamiento', pct:fuerzaActs.length?Math.round((Object.values(exChecksToday).filter(Boolean).length/(fuerzaActs[0]&&getFDForDate?getFDForDate(fuerzaActs[0].sub,today).ex.length:6))*100):0, detail:fuerzaActs.length?fuerzaActs[0].sub+' · '+((P||{}).training_time||'18–19h'):'Sin entreno hoy', col:'var(--fuerza)', page:'training'},
+      {ico:'💊',name:'Suplementos', pct:suplTotal>0?Math.round((suplDone/suplTotal)*100):0, detail:`${suplDone} / ${suplTotal} tomas`, col:'var(--moss)', page:'supl'},
+    ];
+    progGrid.innerHTML = progs.map((p,idx)=>{
+      const pct = Math.min(p.pct,100);
+      return `<div onclick="goPage('${p.page}',document.getElementById('bn-${p.page}'))" style="padding:12px 0;${idx<progs.length-1?'border-bottom:0.5px solid var(--brd);':''}cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+          <div style="width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:${p.col}22;">${p.ico}</div>
+          <div style="flex:1;font-size:13px;font-weight:700;color:var(--ink);">${p.name}</div>
+          <div style="font-size:13px;font-weight:800;color:${p.col};">${pct}%</div>
+        </div>
+        <div style="height:4px;background:rgba(100,80,50,.08);border-radius:2px;overflow:hidden;">
+          <div style="height:4px;background:${p.col};border-radius:2px;width:${pct}%;"></div>
+        </div>
+        <div style="font-size:10px;color:var(--ink3);margin-top:5px;">${p.detail}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Next session card ──
+  const nextCard = document.getElementById('home-next-card');
+  if(nextCard){
+    const nextAct = todayActs.find(a=>a.type==='fuerza') || todayActs[0];
+    if(nextAct){
+      nextCard.innerHTML = `<div style="background:linear-gradient(135deg,#1e3a5f 0%,#0d2137 100%);border-radius:var(--r);padding:14px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 16px rgba(30,58,95,.3);">
+        <div style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${nextAct.type==='padel'?'🎾':'🏋️'}</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:2px;">${nextAct.sub||nextAct.type} · hoy</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.55);">${nextAct.time||''}</div>
+        </div>
+        <div style="font-size:20px;color:rgba(255,255,255,.3);">›</div>
+      </div>`;
+      nextCard.onclick = ()=>goPage('training',document.getElementById('bn-training'));
+    } else {
+      nextCard.innerHTML = '';
+    }
+  }
+}
+
+/* ══════════════════════════════════════════════
+   SUPLEMENTOS PAGE
+══════════════════════════════════════════════ */
+let suplChecks = {};
+let suplMine = [];
+try{ suplChecks = JSON.parse(localStorage.getItem('fp_suplc')||'{}'); }catch(e){}
+try{ suplMine = JSON.parse(localStorage.getItem('fp_suplm')||'[]'); }catch(e){}
+
+// Default supplements plan if none defined
+const SUPL_DEFAULT = [
+  {id:'s1', name:'Proteína whey · 1 scoop', time:'Desayuno', icon:'🥛', when:'morning'},
+  {id:'s2', name:'Creatina · 5g', time:'Con el desayuno', icon:'⚡', when:'morning'},
+  {id:'s3', name:'Multivitaminas · 1 cáp.', time:'Comida', icon:'🫐', when:'midday'},
+  {id:'s4', name:'Proteína whey · 1 scoop', time:'Post-entreno · máx 30 min', icon:'🥛', when:'post'},
+];
+
+const SUPL_SUGGESTIONS = [
+  {name:'Omega-3', desc:'3 cápsulas/día con comida. Antiinflamatorio, salud cardiovascular.', icon:'🐟'},
+  {name:'Vitamina D3', desc:'2000–4000 UI/día. Fundamental si tienes poca exposición solar.', icon:'☀️'},
+  {name:'ZMA', desc:'Antes de dormir. Mejora la calidad del sueño y la recuperación.', icon:'😴'},
+  {name:'Magnesio', desc:'200–400mg/día. Reduce calambres y mejora el descanso.', icon:'💊'},
+  {name:'Beta-alanina', desc:'3–6g/día. Mejora resistencia muscular en series largas.', icon:'⚡'},
+];
+
+function suplTab(tab){
+  ['plan','mine','sug'].forEach(t=>{
+    const pane=document.getElementById('spl-pane-'+t);
+    const btn=document.getElementById('spl-tab-'+t);
+    if(!pane||!btn)return;
+    const on=t===tab;
+    pane.style.display=on?'block':'none';
+    btn.style.background=on?'var(--surf)':'transparent';
+    btn.style.color=on?'var(--ink)':'var(--ink3)';
+    btn.style.boxShadow=on?'var(--sh)':'none';
+  });
+  if(tab==='sug') renderSuplSuggestions();
+  if(tab==='mine') renderSuplMine();
+}
+
+function renderSuplPage(){
+  const today = fmt(new Date());
+  const plan = suplMine.length > 0 ? suplMine : SUPL_DEFAULT;
+  const checks = suplChecks[today] || {};
+  const done = plan.filter(s=>checks[s.id]).length;
+  const total = plan.length;
+  const pct = total > 0 ? Math.round((done/total)*100) : 0;
+
+  // Progress
+  const pctEl = document.getElementById('supl-pct');
+  const barEl = document.getElementById('supl-bar');
+  const lblEl = document.getElementById('supl-bar-lbl');
+  if(pctEl) pctEl.textContent = pct + '%';
+  if(barEl) barEl.style.width = pct + '%';
+  if(lblEl) lblEl.textContent = done + ' de ' + total + ' tomas completadas';
+
+  // Plan list
+  const listEl = document.getElementById('spl-plan-list');
+  if(listEl) listEl.innerHTML = plan.map(s=>{
+    const checked = !!checks[s.id];
+    const badge = s.when==='post'
+      ? `<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:#fce4ec;color:#c2185b;">Post</span>`
+      : checked
+        ? `<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:#e6f4ea;color:#1e7e34;">Hecho</span>`
+        : `<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:#fff3e0;color:#e65100;">Pendiente</span>`;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--brd);cursor:pointer;" onclick="toggleSupl('${s.id}')">
+      <div style="width:24px;height:24px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;${checked?'background:var(--moss);color:#fff;':'border:1.5px solid rgba(100,80,50,.18);'}">${checked?'✓':''}</div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;color:var(--ink);">${s.icon} ${s.name}</div>
+        <div style="font-size:10px;color:var(--ink3);margin-top:1px;">${s.time}</div>
+      </div>
+      ${badge}
+    </div>`;
+  }).join('').replace(/border-bottom:0\.5px solid var\(--brd\)(?!.*border-bottom:0\.5px)/s, 'border-bottom:none');
+}
+
+function toggleSupl(id){
+  const today = fmt(new Date());
+  if(!suplChecks[today]) suplChecks[today] = {};
+  suplChecks[today][id] = !suplChecks[today][id];
+  localStorage.setItem('fp_suplc', JSON.stringify(suplChecks));
+  persist();
+  renderSuplPage();
+}
+
+function renderSuplMine(){
+  const listEl = document.getElementById('spl-mine-list');
+  if(!listEl) return;
+  const plan = suplMine.length > 0 ? suplMine : SUPL_DEFAULT;
+  listEl.innerHTML = plan.map((s,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--brd);">
+      <div style="font-size:20px;">${s.icon}</div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;color:var(--ink);">${s.name}</div>
+        <div style="font-size:10px;color:var(--ink3);">${s.time}</div>
+      </div>
+      <button onclick="removeSupplement(${i})" style="background:none;border:none;font-size:16px;color:var(--ink3);cursor:pointer;">×</button>
+    </div>`).join('');
+}
+
+function renderSuplSuggestions(){
+  const el = document.getElementById('spl-suggestions');
+  if(!el) return;
+  el.innerHTML = SUPL_SUGGESTIONS.map(s=>`
+    <div style="background:var(--surf2);border-radius:12px;padding:12px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span style="font-size:18px;">${s.icon}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--ink);">${s.name}</span>
+      </div>
+      <div style="font-size:11px;color:var(--ink3);line-height:1.5;">${s.desc}</div>
+    </div>`).join('');
+}
+
+function addMySupplement(){
+  const name = prompt('Nombre del suplemento (ej: Omega-3 · 2 cápsulas):');
+  if(!name) return;
+  const time = prompt('¿Cuándo tomarlo? (ej: Con el desayuno):') || 'A definir';
+  if(suplMine.length === 0) suplMine = [...SUPL_DEFAULT];
+  suplMine.push({id:'s'+Date.now(), name, time, icon:'💊', when:'custom'});
+  localStorage.setItem('fp_suplm', JSON.stringify(suplMine));
+  persist();
+  renderSuplMine();
+}
+
+function removeSupplement(idx){
+  if(suplMine.length === 0) suplMine = [...SUPL_DEFAULT];
+  suplMine.splice(idx,1);
+  localStorage.setItem('fp_suplm', JSON.stringify(suplMine));
+  persist();
+  renderSuplMine();
+}
+
 </script>
 </body>
 </html>
